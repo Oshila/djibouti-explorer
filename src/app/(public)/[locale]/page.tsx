@@ -1,9 +1,5 @@
-'use client';
-
-import { useState, useEffect, use } from 'react';  // ← Add 'use' import
 import { Locale } from '@/types';
-import { db } from '@/lib/firebase/client';
-import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase/admin';
 import { HeroSection } from '@/components/home/HeroSection';
 import { FeaturedToursCarousel } from '@/components/home/FeaturedToursCarousel';
 import { DestinationsGrid } from '@/components/home/DestinationsGrid';
@@ -14,57 +10,46 @@ import { GoogleMap } from '@/components/home/GoogleMap';
 import { WhatsAppCTA } from '@/components/shared/WhatsAppCTA';
 
 interface Props {
-  params: Promise<{  // ← Change to Promise
+  params: Promise<{
     locale: Locale;
   }>;
 }
 
-export default function HomePage({ params }: Props) {
-  // Unwrap the params Promise using React.use()
-  const { locale } = use(params);
+// Force dynamic rendering to always fetch fresh data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+async function getTours() {
+  try {
+    console.log('🔄 Server: Fetching tours from Firebase Admin...');
+    console.log('📁 Project:', process.env.FIREBASE_PROJECT_ID);
+    
+    const snapshot = await adminDb.collection('tours')
+      .where('published', '==', true)
+      .orderBy('createdAt', 'desc')
+      .limit(20)
+      .get();
+    
+    const tours = snapshot.docs.map(doc => ({ 
+      id: doc.id, 
+      ...doc.data() 
+    }));
+    
+    console.log(`✅ Server: Found ${tours.length} tours`);
+    return tours;
+  } catch (error) {
+    console.error('❌ Server: Error fetching tours:', error);
+    return [];
+  }
+}
+
+export default async function HomePage({ params }: Props) {
+  const { locale } = await params;
   const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
   
-  const [tours, setTours] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchTours() {
-      try {
-        console.log('🔄 Fetching tours from Firebase...');
-        const q = query(
-          collection(db, 'tours'),
-          orderBy('createdAt', 'desc'),
-          limit(20)
-        );
-        const snapshot = await getDocs(q);
-        const tourData = snapshot.docs.map(doc => ({ 
-          id: doc.id, 
-          ...doc.data() 
-        }));
-        console.log('✅ Fetched tours:', tourData.length);
-        setTours(tourData);
-      } catch (err) {
-        console.error('❌ Error fetching tours:', err);
-        setError('Failed to load tours');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchTours();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cream">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-teal border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="mt-4 text-nearblack/60">Loading tours...</p>
-        </div>
-      </div>
-    );
-  }
+  const tours = await getTours();
+  
+  console.log(`📊 Rendering home page with ${tours.length} tours`);
 
   return (
     <>
