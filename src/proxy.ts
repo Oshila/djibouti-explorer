@@ -13,11 +13,12 @@ function getLocale(pathname: string): string {
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   
-  // Skip proxy for API routes and static assets
+  // Skip proxy for API routes, static assets, AND ADMIN ROUTES
   if (
     pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/static') ||
+    pathname.startsWith('/admin') ||        // ← ADD THIS - excludes ALL admin routes
     pathname.includes('.')
   ) {
     return NextResponse.next();
@@ -46,8 +47,9 @@ export function proxy(request: NextRequest) {
   
   return NextResponse.redirect(new URL(newPath, request.url));
 }
+
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|admin).*)',  // ← ADD admin to matcher
   ],
 };
