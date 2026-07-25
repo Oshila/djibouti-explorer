@@ -15,28 +15,63 @@ interface Props {
   }>;
 }
 
-// Force dynamic rendering to always fetch fresh data
+interface Tour {
+  id: string;
+  createdAt?: string | Date;
+  [key: string]: any;
+}
+
+// Force dynamic rendering
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 async function getTours() {
   try {
     console.log('🔄 Server: Fetching tours from Firebase Admin...');
-    console.log('📁 Project:', process.env.FIREBASE_PROJECT_ID);
     
-    const snapshot = await adminDb.collection('tours')
-      .where('published', '==', true)
-      .orderBy('createdAt', 'desc')
-      .limit(20)
-      .get();
-    
-    const tours = snapshot.docs.map(doc => ({ 
-      id: doc.id, 
-      ...doc.data() 
-    }));
-    
-    console.log(`✅ Server: Found ${tours.length} tours`);
-    return tours;
+    // Try with ordering first
+    try {
+      const snapshot = await adminDb.collection('tours')
+        .where('published', '==', true)
+        .orderBy('createdAt', 'desc')
+        .limit(20)
+        .get();
+      
+      const tours = snapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...(doc.data() as Omit<Tour, 'id'>)
+      }));
+      
+      console.log(`✅ Server: Found ${tours.length} tours with ordering`);
+      return tours;
+    } catch (indexError: any) {
+      // If index error, fallback to unordered query
+      if (indexError.message?.includes('index')) {
+        console.log('⚠️ Index not ready, using fallback query...');
+        
+        const snapshot = await adminDb.collection('tours')
+          .where('published', '==', true)
+          .limit(20)
+          .get();
+        
+        const tours = snapshot.docs.map(doc => ({ 
+          id: doc.id, 
+          ...(doc.data() as Omit<Tour, 'id'>)
+        }));
+        
+        // Sort in memory
+        tours.sort((a, b) => {
+          const dateA = (a as any).createdAt ? new Date((a as any).createdAt) : new Date(0);
+          const dateB = (b as any).createdAt ? new Date((b as any).createdAt) : new Date(0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        
+        console.log(`✅ Server: Found ${tours.length} tours with fallback sorting`);
+        return tours;
+      }
+      
+      throw indexError;
+    }
   } catch (error) {
     console.error('❌ Server: Error fetching tours:', error);
     return [];
@@ -48,8 +83,6 @@ export default async function HomePage({ params }: Props) {
   const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
   
   const tours = await getTours();
-  
-  console.log(`📊 Rendering home page with ${tours.length} tours`);
 
   return (
     <>
