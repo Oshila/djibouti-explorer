@@ -1,17 +1,15 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { CookieConsent } from '@/components/shared/CookieConsent';  // ← Add this import
+import { CookieConsent } from '@/components/shared/CookieConsent';
 
 interface Props {
   children: React.ReactNode;
-  params: {
-    locale: string;
-  };
+  // Remove params - this layout doesn't need it
 }
 
-export default function PublicLayout({ children, params }: Props) {
-  const { locale } = params;
-  const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
+export default function PublicLayout({ children }: Props) {
+  // Default to 'en' since we can't access params here
+  const validLocale = 'en';
 
   return (
     <div className="min-h-screen flex flex-col bg-cream">
