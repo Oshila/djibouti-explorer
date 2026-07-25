@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-teal: #1E3D47;
+    --color-terracotta: #C0532C;
+    --color-ochre: #DEA23A;
+    --color-olive: #72803A;
+    --color-cream: #F2E8D4;
+    --color-nearblack: #141414;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-cream text-nearblack font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+
+  ::selection {
+    @apply bg-teal/20 text-teal;
+  }
+
+  *:focus-visible {
+    @apply outline-2 outline-teal outline-offset-2;
+  }
+}
+
+@layer components {
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-padding {
+    @apply py-16 md:py-24;
+  }
+
+  .btn-primary {
+    @apply bg-terracotta text-white px-6 py-3 rounded-lg font-medium 
+           transition-all duration-300 hover:bg-terracotta/90 hover:shadow-lg
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-teal text-white px-6 py-3 rounded-lg font-medium 
+           transition-all duration-300 hover:bg-teal/90 hover:shadow-lg
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-outline {
+    @apply border-2 border-teal text-teal px-6 py-3 rounded-lg font-medium 
+           transition-all duration-300 hover:bg-teal hover:text-white
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { 
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
