@@ -1,5 +1,10 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { use } from 'react';
 import { Locale } from '@/types';
-import { adminDb } from '@/lib/firebase/admin';
+import { db } from '@/lib/firebase/client';
+import { collection, getDocs, limit } from 'firebase/firestore';
 import { HeroSection } from '@/components/home/HeroSection';
 import { FeaturedToursCarousel } from '@/components/home/FeaturedToursCarousel';
 import { DestinationsGrid } from '@/components/home/DestinationsGrid';
@@ -17,72 +22,123 @@ interface Props {
 
 interface Tour {
   id: string;
-  createdAt?: string | Date;
-  [key: string]: any;
+  title: { en: string; fr: string };
+  slug: { en: string; fr: string };
+  price: number;
+  depositAmount: number;
+  currency: string;
+  duration: number;
+  maxGroupSize: number;
+  difficulty: string;
+  minAge: number;
+  meetingPoint: { en: string; fr: string };
+  images: { primary: string; gallery: string[] };
+  highlights: { en: string[]; fr: string[] };
+  itinerary: any[];
+  included: { en: string[]; fr: string[] };
+  excluded: { en: string[]; fr: string[] };
+  whatToBring: { en: string[]; fr: string[] };
+  accommodation: { en: string; fr: string };
+  transportation: { en: string; fr: string };
+  cancellationPolicy: { en: string; fr: string };
+  faqs: any[];
+  itineraryPdfUrl: { en: string; fr: string };
+  bestSeasons: string[];
+  categories: string[];
+  tags: string[];
+  metaTitle: { en: string; fr: string };
+  metaDescription: { en: string; fr: string };
+  rating: number;
+  reviewCount: number;
+  featured: boolean;
+  published: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export default function HomePage({ params }: Props) {
+  const { locale } = use(params);
+  const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
+  
+  const [tours, setTours] = useState<Tour[]>([]);
+  const [loading, setLoading] = useState(true);
 
-async function getTours() {
-  try {
-    console.log('🔄 Server: Fetching tours from Firebase Admin...');
-    
-    // Try with ordering first
-    try {
-      const snapshot = await adminDb.collection('tours')
-        .where('published', '==', true)
-        .orderBy('createdAt', 'desc')
-        .limit(20)
-        .get();
-      
-      const tours = snapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...(doc.data() as Omit<Tour, 'id'>)
-      }));
-      
-      console.log(`✅ Server: Found ${tours.length} tours with ordering`);
-      return tours;
-    } catch (indexError: any) {
-      // If index error, fallback to unordered query
-      if (indexError.message?.includes('index')) {
-        console.log('⚠️ Index not ready, using fallback query...');
+  useEffect(() => {
+    async function fetchTours() {
+      try {
+        console.log('🔄 Client: Fetching tours from Firebase...');
         
-        const snapshot = await adminDb.collection('tours')
-          .where('published', '==', true)
-          .limit(20)
-          .get();
+        // Get all tours (no filters)
+        const querySnapshot = await getDocs(collection(db, 'tours'));
         
-        const tours = snapshot.docs.map(doc => ({ 
-          id: doc.id, 
-          ...(doc.data() as Omit<Tour, 'id'>)
-        }));
+        const tourData: Tour[] = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            title: data.title || { en: '', fr: '' },
+            slug: data.slug || { en: '', fr: '' },
+            price: data.price || 0,
+            depositAmount: data.depositAmount || 0,
+            currency: data.currency || 'USD',
+            duration: data.duration || 1,
+            maxGroupSize: data.maxGroupSize || 8,
+            difficulty: data.difficulty || 'easy',
+            minAge: data.minAge || 0,
+            meetingPoint: data.meetingPoint || { en: '', fr: '' },
+            images: data.images || { primary: '', gallery: [] },
+            highlights: data.highlights || { en: [], fr: [] },
+            itinerary: data.itinerary || [],
+            included: data.included || { en: [], fr: [] },
+            excluded: data.excluded || { en: [], fr: [] },
+            whatToBring: data.whatToBring || { en: [], fr: [] },
+            accommodation: data.accommodation || { en: '', fr: '' },
+            transportation: data.transportation || { en: '', fr: '' },
+            cancellationPolicy: data.cancellationPolicy || { en: '', fr: '' },
+            faqs: data.faqs || [],
+            itineraryPdfUrl: data.itineraryPdfUrl || { en: '', fr: '' },
+            bestSeasons: data.bestSeasons || [],
+            categories: data.categories || [],
+            tags: data.tags || [],
+            metaTitle: data.metaTitle || { en: '', fr: '' },
+            metaDescription: data.metaDescription || { en: '', fr: '' },
+            rating: data.rating || 0,
+            reviewCount: data.reviewCount || 0,
+            featured: data.featured || false,
+            published: data.published || false,
+            createdAt: data.createdAt || new Date().toISOString(),
+            updatedAt: data.updatedAt || new Date().toISOString(),
+          };
+        });
         
-        // Sort in memory
-        tours.sort((a, b) => {
-          const dateA = (a as any).createdAt ? new Date((a as any).createdAt) : new Date(0);
-          const dateB = (b as any).createdAt ? new Date((b as any).createdAt) : new Date(0);
+        // Sort by createdAt (newest first)
+        const sortedTours = tourData.sort((a, b) => {
+          const dateA = new Date(a.createdAt);
+          const dateB = new Date(b.createdAt);
           return dateB.getTime() - dateA.getTime();
         });
         
-        console.log(`✅ Server: Found ${tours.length} tours with fallback sorting`);
-        return tours;
+        console.log('✅ Client: Fetched tours:', sortedTours.length);
+        setTours(sortedTours);
+      } catch (err) {
+        console.error('❌ Client: Error fetching tours:', err);
+      } finally {
+        setLoading(false);
       }
-      
-      throw indexError;
     }
-  } catch (error) {
-    console.error('❌ Server: Error fetching tours:', error);
-    return [];
-  }
-}
 
-export default async function HomePage({ params }: Props) {
-  const { locale } = await params;
-  const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
-  
-  const tours = await getTours();
+    fetchTours();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-cream">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-teal border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-nearblack/60">Loading tours...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
