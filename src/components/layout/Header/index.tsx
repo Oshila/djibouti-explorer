@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Globe } from 'lucide-react';
+import { Bars3Icon, XMarkIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 import { Locale } from '@/types';
 
 interface Props {
@@ -23,7 +24,6 @@ export function Header({ locale }: Props) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Navigation items - defined INSIDE the component
   const navigation = {
     en: [
       { name: 'Tours', href: `/${locale}/tours` },
@@ -41,7 +41,6 @@ export function Header({ locale }: Props) {
     ],
   };
 
-  // Get the correct navigation based on locale
   const navItems = navigation[locale as 'en' | 'fr'] || navigation.en;
 
   return (
@@ -53,8 +52,18 @@ export function Header({ locale }: Props) {
       <div className="container-custom">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link href={`/${locale}`} className="flex items-center gap-2">
-            <span className="text-2xl font-heading text-white">Djibouti Explorer</span>
+          <Link href={`/${locale}`} className="flex items-center gap-3 flex-shrink-0">
+            <Image
+              src="/images/logo.jpg"
+              alt="Djibouti Explorer"
+              width={82}
+              height={50}
+              className="object-contain"
+              priority
+            />
+            <span className="text-xl md:text-2xl font-heading text-white tracking-wide hidden sm:block">
+              Djibouti Explorer
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -87,7 +96,7 @@ export function Header({ locale }: Props) {
                 href={`/${locale === 'en' ? 'fr' : 'en'}${pathname ? pathname.replace(/^\/[a-z]{2}/, '') : ''}`}
                 className="text-cream/80 hover:text-white transition-colors text-sm"
               >
-                <Globe className="w-5 h-5" />
+                <GlobeAltIcon className="w-5 h-5" />
               </Link>
             </div>
           </div>
@@ -98,7 +107,7 @@ export function Header({ locale }: Props) {
             className="lg:hidden text-white p-2"
             aria-label="Toggle menu"
           >
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {isMenuOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Locale } from '@/types';
 import { 
   EnvelopeIcon,
@@ -55,8 +56,17 @@ export function Footer({ locale }: Props) {
       <div className="container-custom py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           <div>
-            <h3 className="text-white font-heading text-xl mb-4">Djibouti Explorer</h3>
-            <p className="text-cream/60 text-sm leading-relaxed">{t.company}</p>
+            <Link href={`/${locale}`} className="flex items-center gap-3">
+              <Image
+                src="/images/logo.jpg"
+                alt="Djibouti Explorer"
+                width={60}
+                height={40}
+                className="object-contain"
+              />
+              <h3 className="text-white font-heading text-xl">Djibouti Explorer</h3>
+            </Link>
+            <p className="text-cream/60 text-sm leading-relaxed mt-4">{t.company}</p>
             <div className="flex gap-4 mt-4">
               <a href="#" className="text-cream/40 hover:text-ochre transition-colors">
                 <GlobeAltIcon className="w-5 h-5" />
