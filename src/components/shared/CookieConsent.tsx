@@ -20,7 +20,6 @@ export function CookieConsent({ locale }: Props) {
   const acceptCookies = () => {
     localStorage.setItem('cookieConsent', 'accepted');
     setIsVisible(false);
-    // Enable analytics here
   };
 
   const declineCookies = () => {
@@ -52,7 +51,7 @@ export function CookieConsent({ locale }: Props) {
       <div className="container-custom flex flex-col sm:flex-row items-center justify-between gap-4">
         <p className="text-sm text-cream/80 text-center sm:text-left">
           {t.message}
-          <a href="/privacy" className="text-ochre hover:underline ml-1">
+          <a href={`/${locale}/privacy`} className="text-ochre hover:underline ml-1">
             {t.learnMore}
           </a>
         </p>

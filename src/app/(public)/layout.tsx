@@ -1,14 +1,16 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { CookieConsent } from '@/components/shared/CookieConsent';
+import { CookieConsent } from '@/components/shared/CookieConsent';  // ← Add this import
 
 interface Props {
   children: React.ReactNode;
-  params: Promise<{ locale: string }>;
+  params: {
+    locale: string;
+  };
 }
 
-export default async function PublicLayout({ children, params }: Props) {
-  const { locale } = await params;
+export default function PublicLayout({ children, params }: Props) {
+  const { locale } = params;
   const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
 
   return (
@@ -18,8 +20,6 @@ export default async function PublicLayout({ children, params }: Props) {
         {children}
       </main>
       <Footer locale={validLocale as 'en' | 'fr'} />
-      
-      {/* 👇 ADD THIS LINE - Cookie Consent Banner */}
       <CookieConsent locale={validLocale as 'en' | 'fr'} />
     </div>
   );
