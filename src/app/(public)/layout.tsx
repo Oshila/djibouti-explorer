@@ -9,7 +9,10 @@ interface Props {
 }
 
 export default async function PublicLayout({ children, params }: Props) {
+  // Await the params
   const { locale } = await params;
+  
+  // Ensure locale is valid
   const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
 
   return (

@@ -33,6 +33,7 @@ async function getFeaturedTours() {
 }
 
 export default async function HomePage({ params }: Props) {
+  // Await the params
   const { locale } = await params;
   const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
   

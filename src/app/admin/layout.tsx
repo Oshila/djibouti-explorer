@@ -33,7 +33,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setLoading(false);
 
       if (user) {
-        // Check if user is admin
         try {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           if (userDoc.exists()) {
@@ -41,7 +40,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             if (userData.role === 'admin' || userData.role === 'staff') {
               setIsAdmin(true);
             } else {
-              // Not admin - sign out and redirect
               await signOut(auth);
               router.push('/admin/login');
             }
@@ -92,13 +90,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Tours', href: '/admin/tours', icon: MapPinIcon },
     { name: 'Bookings', href: '/admin/bookings', icon: CalendarIcon },
     { name: 'Reviews', href: '/admin/reviews', icon: StarIcon },
-    { name: 'Blog', href: '/admin/blog', icon: DocumentTextIcon },
     { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
   ];
 
   return (
     <div className="min-h-screen bg-cream flex">
-      {/* Mobile Sidebar Toggle */}
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-md"
@@ -106,19 +102,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {isSidebarOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
       </button>
 
-      {/* Sidebar */}
       <aside
         className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-teal text-white transform transition-transform duration-300 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         } flex flex-col`}
       >
-        {/* Logo */}
         <div className="p-6 border-b border-white/10">
           <h1 className="text-2xl font-heading">Djibouti Explorer</h1>
           <p className="text-cream/60 text-sm">Admin Dashboard</p>
         </div>
 
-        {/* User Info */}
         <div className="p-4 border-b border-white/10 flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
             <UserCircleIcon className="w-6 h-6 text-cream/60" />
@@ -129,7 +122,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
           {navigation.map((item) => {
             const Icon = item.icon;
@@ -150,7 +142,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        {/* Logout Button */}
         <div className="p-4 border-t border-white/10">
           <button
             onClick={handleLogout}
@@ -162,7 +153,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 min-h-screen">
         <div className="p-4 md:p-8 lg:p-12">
           {children}

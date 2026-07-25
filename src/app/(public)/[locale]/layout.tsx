@@ -1,3 +1,5 @@
+import { notFound } from 'next/navigation';
+
 interface Props {
   children: React.ReactNode;
   params: {
@@ -6,9 +8,13 @@ interface Props {
 }
 
 export default async function LocaleLayout({ children, params }: Props) {
-  // Await the params object
+  // Await the params (required in Next.js 15+)
   const { locale } = await params;
   
-  // Pass locale to children if needed
+  // Validate locale
+  if (!['en', 'fr'].includes(locale)) {
+    notFound();
+  }
+
   return <>{children}</>;
 }
