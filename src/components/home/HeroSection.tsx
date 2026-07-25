@@ -1,14 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Locale } from '@/types';
 import { 
   MagnifyingGlassIcon,
   MapPinIcon,
-  CalendarIcon,
-  UserGroupIcon,
-  StarIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  StarIcon
 } from '@heroicons/react/24/outline';
 
 interface Props {
@@ -16,6 +16,10 @@ interface Props {
 }
 
 export function HeroSection({ locale }: Props) {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDestination, setSelectedDestination] = useState('');
+
   const content = {
     en: {
       title: 'Discover the Extraordinary Side of Djibouti',
@@ -24,6 +28,7 @@ export function HeroSection({ locale }: Props) {
       ctaSecondary: 'Plan Your Trip',
       searchPlaceholder: 'Search experiences...',
       destinations: 'All Destinations',
+      search: 'Search',
     },
     fr: {
       title: 'Découvrez le Côté Extraordinaire de Djibouti',
@@ -32,10 +37,19 @@ export function HeroSection({ locale }: Props) {
       ctaSecondary: 'Planifier Votre Voyage',
       searchPlaceholder: 'Rechercher des expériences...',
       destinations: 'Toutes les Destinations',
+      search: 'Rechercher',
     },
   };
 
   const t = content[locale];
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('search', searchQuery);
+    if (selectedDestination) params.set('destination', selectedDestination);
+    router.push(`/${locale}/tours?${params.toString()}`);
+  };
 
   return (
     <section className="relative min-h-[90vh] flex items-center bg-teal overflow-hidden">
@@ -46,7 +60,6 @@ export function HeroSection({ locale }: Props) {
       
       <div className="absolute top-20 right-20 w-64 h-64 bg-ochre/10 rounded-full blur-3xl" />
       <div className="absolute bottom-20 left-20 w-96 h-96 bg-terracotta/10 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/5 rounded-full blur-3xl" />
 
       <div className="container-custom relative z-10 py-20">
         <div className="max-w-4xl">
@@ -65,33 +78,46 @@ export function HeroSection({ locale }: Props) {
             {t.subtitle}
           </p>
 
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2 md:p-3 mb-8 border border-white/20 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          {/* Search Bar - Now Functional */}
+          <form onSubmit={handleSearch} className="bg-white/10 backdrop-blur-md rounded-2xl p-2 md:p-3 mb-8 border border-white/20 animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <div className="flex flex-col md:flex-row gap-2">
               <div className="flex-1 relative">
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-cream/60 w-5 h-5" />
                 <input
                   type="text"
                   placeholder={t.searchPlaceholder}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-white/5 text-white placeholder:text-cream/60 rounded-xl border border-white/10 focus:border-ochre focus:ring-2 focus:ring-ochre/20 transition-all outline-none"
                 />
               </div>
               <div className="flex gap-2">
                 <div className="relative flex-1 min-w-[150px]">
                   <MapPinIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-cream/60 w-5 h-5" />
-                  <select className="w-full pl-10 pr-4 py-3 bg-white/5 text-white rounded-xl border border-white/10 focus:border-ochre focus:ring-2 focus:ring-ochre/20 transition-all appearance-none outline-none cursor-pointer">
+                  <select
+                    value={selectedDestination}
+                    onChange={(e) => setSelectedDestination(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-white/5 text-white rounded-xl border border-white/10 focus:border-ochre focus:ring-2 focus:ring-ochre/20 transition-all appearance-none outline-none cursor-pointer"
+                  >
                     <option value="" className="text-nearblack">{t.destinations}</option>
-                    <option value="lake-assal" className="text-nearblack">Lake Assal</option>
-                    <option value="lac-abbe" className="text-nearblack">Lac Abbé</option>
-                    <option value="tadjoura" className="text-nearblack">Tadjoura</option>
-                    <option value="ardoukoba" className="text-nearblack">Ardoukoba</option>
+                    <option value="Lake Assal" className="text-nearblack">Lake Assal</option>
+                    <option value="Lac Abbé" className="text-nearblack">Lac Abbé</option>
+                    <option value="Tadjoura Gulf" className="text-nearblack">Tadjoura Gulf</option>
+                    <option value="Ardoukoba" className="text-nearblack">Ardoukoba</option>
+                    <option value="Day Forest" className="text-nearblack">Day Forest</option>
+                    <option value="Moucha Island" className="text-nearblack">Moucha Island</option>
+                    <option value="Djibouti City" className="text-nearblack">Djibouti City</option>
                   </select>
                 </div>
-                <button className="bg-terracotta hover:bg-terracotta/90 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 whitespace-nowrap">
-                  {locale === 'en' ? 'Search' : 'Rechercher'}
+                <button
+                  type="submit"
+                  className="bg-terracotta hover:bg-terracotta/90 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 whitespace-nowrap"
+                >
+                  {t.search}
                 </button>
               </div>
             </div>
-          </div>
+          </form>
 
           <div className="flex flex-wrap gap-4 animate-slide-up" style={{ animationDelay: '0.3s' }}>
             <Link
@@ -126,17 +152,6 @@ export function HeroSection({ locale }: Props) {
               <div className="text-3xl font-bold text-ochre">15+</div>
               <div className="text-cream/70 text-sm">{locale === 'en' ? 'Destinations' : 'Destinations'}</div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-cream/30 animate-bounce">
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-xs uppercase tracking-widest">
-            {locale === 'en' ? 'Scroll' : 'Défiler'}
-          </span>
-          <div className="w-6 h-10 border-2 border-cream/20 rounded-full flex items-start justify-center p-1">
-            <div className="w-1.5 h-3 bg-cream/40 rounded-full" />
           </div>
         </div>
       </div>

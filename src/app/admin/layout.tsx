@@ -13,6 +13,7 @@ import {
   StarIcon,
   DocumentTextIcon,
   Cog6ToothIcon,
+  GlobeAltIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
@@ -88,6 +89,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: HomeIcon },
     { name: 'Tours', href: '/admin/tours', icon: MapPinIcon },
+    { name: 'Destinations', href: '/admin/destinations', icon: GlobeAltIcon },
     { name: 'Bookings', href: '/admin/bookings', icon: CalendarIcon },
     { name: 'Reviews', href: '/admin/reviews', icon: StarIcon },
     { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
