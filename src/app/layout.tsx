@@ -20,7 +20,6 @@ export const metadata: Metadata = {
     template: '%s | Djibouti Explorer',
   },
   description: 'Book authentic tours in Djibouti. Explore Lake Assal, whale sharks, and the best of Djibouti with local experts.',
-  keywords: 'Djibouti tours, Lake Assal, whale sharks, Djibouti travel, African tours',
 };
 
 export const viewport: Viewport = {

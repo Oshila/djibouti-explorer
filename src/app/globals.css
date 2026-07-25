@@ -1,92 +1,162 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  :root {
-    --color-teal: #1E3D47;
-    --color-terracotta: #C0532C;
-    --color-ochre: #DEA23A;
-    --color-olive: #72803A;
-    --color-cream: #F2E8D4;
-    --color-nearblack: #141414;
-  }
-
-  * {
-    @apply border-border;
-  }
-
-  html {
-    @apply scroll-smooth;
-  }
-
-  body {
-    @apply bg-cream text-nearblack font-body antialiased;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-heading;
-  }
-
-  ::selection {
-    @apply bg-teal/20 text-teal;
-  }
-
-  *:focus-visible {
-    @apply outline-2 outline-teal outline-offset-2;
-  }
+/* Custom theme configuration */
+@theme {
+  --color-teal: #1E3D47;
+  --color-terracotta: #C0532C;
+  --color-ochre: #DEA23A;
+  --color-olive: #72803A;
+  --color-cream: #F2E8D4;
+  --color-nearblack: #141414;
+  
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+  
+  --container-custom: 1280px;
 }
 
-@layer components {
+/* Base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-cream);
+  color: var(--color-nearblack);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+::selection {
+  background-color: var(--color-teal);
+  color: var(--color-cream);
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
+}
+
+/* Container */
+.container-custom {
+  max-width: var(--container-custom);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
   .container-custom {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
-
-  .section-padding {
-    @apply py-16 md:py-24;
-  }
-
-  .btn-primary {
-    @apply bg-terracotta text-white px-6 py-3 rounded-lg font-medium 
-           transition-all duration-300 hover:bg-terracotta/90 hover:shadow-lg
-           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  .btn-secondary {
-    @apply bg-teal text-white px-6 py-3 rounded-lg font-medium 
-           transition-all duration-300 hover:bg-teal/90 hover:shadow-lg
-           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  .btn-outline {
-    @apply border-2 border-teal text-teal px-6 py-3 rounded-lg font-medium 
-           transition-all duration-300 hover:bg-teal hover:text-white
-           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 }
 
-@layer utilities {
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-in-out;
+@media (min-width: 1024px) {
+  .container-custom {
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
+}
 
-  .animate-slide-up {
-    animation: slideUp 0.5s ease-out;
-  }
+/* Section padding */
+.section-padding {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
 
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+@media (min-width: 768px) {
+  .section-padding {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
   }
+}
 
-  @keyframes slideUp {
-    from { 
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+/* Buttons */
+.btn-primary {
+  background-color: var(--color-terracotta);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.3s;
+  display: inline-block;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-terracotta);
+  opacity: 0.9;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+}
+
+.btn-secondary {
+  background-color: var(--color-teal);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.3s;
+  display: inline-block;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-teal);
+  opacity: 0.9;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.btn-outline {
+  border: 2px solid var(--color-teal);
+  color: var(--color-teal);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.3s;
+  display: inline-block;
+}
+
+.btn-outline:hover {
+  background-color: var(--color-teal);
+  color: white;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out;
 }
