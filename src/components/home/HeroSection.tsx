@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Locale } from '@/types';
 import { 
@@ -53,13 +54,26 @@ export function HeroSection({ locale }: Props) {
 
   return (
     <section className="relative min-h-[90vh] flex items-center bg-teal overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-teal via-teal/90 to-teal/80" />
-      <div className="absolute inset-0 opacity-10" style={{
-        backgroundImage: `radial-gradient(circle at 20% 50%, rgba(222, 162, 58, 0.1) 0%, transparent 50%)`,
-      }} />
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=1920&q=80"
+          alt="Djibouti landscape - Lake Assal salt flats"
+          fill
+          className="object-cover"
+          priority
+          quality={90}
+          onError={(e) => {
+            // Fallback if image doesn't load
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-teal/70 via-teal/60 to-teal/50" />
+      </div>
       
-      <div className="absolute top-20 right-20 w-64 h-64 bg-ochre/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 left-20 w-96 h-96 bg-terracotta/10 rounded-full blur-3xl" />
+      {/* Decorative elements */}
+      <div className="absolute top-20 right-20 w-64 h-64 bg-ochre/10 rounded-full blur-3xl z-10" />
+      <div className="absolute bottom-20 left-20 w-96 h-96 bg-terracotta/10 rounded-full blur-3xl z-10" />
 
       <div className="container-custom relative z-10 py-20">
         <div className="max-w-4xl">
@@ -78,7 +92,7 @@ export function HeroSection({ locale }: Props) {
             {t.subtitle}
           </p>
 
-          {/* Search Bar - Now Functional */}
+          {/* Search Bar */}
           <form onSubmit={handleSearch} className="bg-white/10 backdrop-blur-md rounded-2xl p-2 md:p-3 mb-8 border border-white/20 animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <div className="flex flex-col md:flex-row gap-2">
               <div className="flex-1 relative">

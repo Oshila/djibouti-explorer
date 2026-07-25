@@ -11,9 +11,7 @@ import {
   MapPinIcon,
   CalendarIcon,
   StarIcon,
-  DocumentTextIcon,
   Cog6ToothIcon,
-  GlobeAltIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
@@ -28,6 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Handle auth in useEffect (not during render)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
@@ -40,19 +39,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             const userData = userDoc.data();
             if (userData.role === 'admin' || userData.role === 'staff') {
               setIsAdmin(true);
-            } else {
-              await signOut(auth);
-              router.push('/admin/login');
+              return;
             }
           }
         } catch (error) {
           console.error('Error checking admin status:', error);
         }
+        // Not admin - sign out
+        await signOut(auth);
+        router.push('/admin/login');
       }
     });
 
     return () => unsubscribe();
   }, [router]);
+
+  // Handle redirect in useEffect (not during render)
+  useEffect(() => {
+    if (!loading && !user && pathname !== '/admin/login') {
+      router.push('/admin/login');
+    }
+    if (!loading && user && !isAdmin && pathname !== '/admin/login') {
+      router.push('/admin/login');
+    }
+  }, [loading, user, isAdmin, pathname, router]);
 
   const handleLogout = async () => {
     try {
@@ -75,21 +85,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // On login page
+  // On login page - show only children
   if (pathname === '/admin/login') {
     return <>{children}</>;
   }
 
   // Not authenticated or not admin
   if (!user || !isAdmin) {
-    router.push('/admin/login');
     return null;
   }
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: HomeIcon },
     { name: 'Tours', href: '/admin/tours', icon: MapPinIcon },
-    { name: 'Destinations', href: '/admin/destinations', icon: GlobeAltIcon },
+    { name: 'Destinations', href: '/admin/destinations', icon: MapPinIcon },
     { name: 'Bookings', href: '/admin/bookings', icon: CalendarIcon },
     { name: 'Reviews', href: '/admin/reviews', icon: StarIcon },
     { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
