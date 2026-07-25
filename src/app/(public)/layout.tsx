@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default async function PublicLayout({ children, params }: Props) {
-  // Await the params
+  // Await the params (required in Next.js 15+)
   const { locale } = await params;
   
   // Ensure locale is valid
