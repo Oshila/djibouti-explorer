@@ -10,12 +10,10 @@ interface Props {
 
 export default async function PublicLayout({ children, params }: Props) {
   const { locale } = await params;
-  
-  // Ensure locale is valid
   const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-cream">
       <Header locale={validLocale as 'en' | 'fr'} />
       <main className="flex-grow pt-16 md:pt-20">
         {children}

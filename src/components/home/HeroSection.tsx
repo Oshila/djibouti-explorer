@@ -2,6 +2,14 @@
 
 import Link from 'next/link';
 import { Locale } from '@/types';
+import { 
+  MagnifyingGlassIcon,
+  MapPinIcon,
+  CalendarIcon,
+  UserGroupIcon,
+  StarIcon,
+  ArrowRightIcon
+} from '@heroicons/react/24/outline';
 
 interface Props {
   locale: Locale;
@@ -14,78 +22,121 @@ export function HeroSection({ locale }: Props) {
       subtitle: 'Explore salt lakes, volcanic landscapes, hidden islands, and unforgettable wildlife experiences with local experts.',
       ctaPrimary: 'Explore Tours',
       ctaSecondary: 'Plan Your Trip',
+      searchPlaceholder: 'Search experiences...',
+      destinations: 'All Destinations',
     },
     fr: {
       title: 'Découvrez le Côté Extraordinaire de Djibouti',
       subtitle: 'Explorez les lacs salés, les paysages volcaniques, les îles cachées et des expériences fauniques inoubliables avec des experts locaux.',
       ctaPrimary: 'Explorer les Circuits',
       ctaSecondary: 'Planifier Votre Voyage',
+      searchPlaceholder: 'Rechercher des expériences...',
+      destinations: 'Toutes les Destinations',
     },
   };
 
   const t = content[locale];
 
   return (
-    <section className="relative min-h-[80vh] flex items-center bg-teal overflow-hidden">
-      {/* Background gradient */}
+    <section className="relative min-h-[90vh] flex items-center bg-teal overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-teal via-teal/90 to-teal/80" />
+      <div className="absolute inset-0 opacity-10" style={{
+        backgroundImage: `radial-gradient(circle at 20% 50%, rgba(222, 162, 58, 0.1) 0%, transparent 50%)`,
+      }} />
       
-      {/* Decorative elements */}
       <div className="absolute top-20 right-20 w-64 h-64 bg-ochre/10 rounded-full blur-3xl" />
       <div className="absolute bottom-20 left-20 w-96 h-96 bg-terracotta/10 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/5 rounded-full blur-3xl" />
 
       <div className="container-custom relative z-10 py-20">
-        <div className="max-w-3xl animate-slide-up">
-          <div className="inline-flex items-center gap-2 bg-cream/10 backdrop-blur-sm text-cream px-4 py-2 rounded-full mb-6 border border-cream/20">
-            <span className="w-2 h-2 bg-ochre rounded-full animate-pulse" />
-            <span className="text-sm font-medium">
+        <div className="max-w-4xl">
+          <div className="inline-flex items-center gap-2 bg-cream/10 backdrop-blur-sm text-cream px-4 py-2 rounded-full mb-6 border border-cream/20 animate-fade-in">
+            <StarIcon className="w-4 h-4 text-ochre" />
+            <span className="text-sm font-medium tracking-wide">
               {locale === 'en' ? 'Local Experts • Since 2020' : 'Experts Locaux • Depuis 2020'}
             </span>
           </div>
 
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading text-white leading-tight mb-6">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading text-white leading-[1.1] mb-6 animate-slide-up">
             {t.title}
           </h1>
 
-          <p className="text-lg md:text-xl text-cream/90 mb-10 max-w-2xl leading-relaxed">
+          <p className="text-lg md:text-xl text-cream/90 mb-10 max-w-2xl leading-relaxed animate-slide-up" style={{ animationDelay: '0.1s' }}>
             {t.subtitle}
           </p>
 
-          <div className="flex flex-wrap gap-4">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2 md:p-3 mb-8 border border-white/20 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <div className="flex flex-col md:flex-row gap-2">
+              <div className="flex-1 relative">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-cream/60 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder={t.searchPlaceholder}
+                  className="w-full pl-10 pr-4 py-3 bg-white/5 text-white placeholder:text-cream/60 rounded-xl border border-white/10 focus:border-ochre focus:ring-2 focus:ring-ochre/20 transition-all outline-none"
+                />
+              </div>
+              <div className="flex gap-2">
+                <div className="relative flex-1 min-w-[150px]">
+                  <MapPinIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-cream/60 w-5 h-5" />
+                  <select className="w-full pl-10 pr-4 py-3 bg-white/5 text-white rounded-xl border border-white/10 focus:border-ochre focus:ring-2 focus:ring-ochre/20 transition-all appearance-none outline-none cursor-pointer">
+                    <option value="" className="text-nearblack">{t.destinations}</option>
+                    <option value="lake-assal" className="text-nearblack">Lake Assal</option>
+                    <option value="lac-abbe" className="text-nearblack">Lac Abbé</option>
+                    <option value="tadjoura" className="text-nearblack">Tadjoura</option>
+                    <option value="ardoukoba" className="text-nearblack">Ardoukoba</option>
+                  </select>
+                </div>
+                <button className="bg-terracotta hover:bg-terracotta/90 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 whitespace-nowrap">
+                  {locale === 'en' ? 'Search' : 'Rechercher'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-4 animate-slide-up" style={{ animationDelay: '0.3s' }}>
             <Link
               href={`/${locale}/tours`}
-              className="bg-terracotta hover:bg-terracotta/90 text-white px-8 py-4 rounded-xl font-medium transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95"
+              className="bg-terracotta hover:bg-terracotta/90 text-white px-8 py-4 rounded-xl font-medium transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 inline-flex items-center gap-2"
             >
               {t.ctaPrimary}
+              <ArrowRightIcon className="w-5 h-5" />
             </Link>
             <Link
               href={`/${locale}/destinations`}
-              className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white px-8 py-4 rounded-xl font-medium border border-white/20 transition-all duration-300 hover:shadow-lg"
+              className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white px-8 py-4 rounded-xl font-medium border border-white/20 transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95"
             >
               {t.ctaSecondary}
             </Link>
           </div>
 
-          {/* Trust indicators */}
-          <div className="flex flex-wrap gap-8 mt-12 pt-8 border-t border-white/10">
+          <div className="flex flex-wrap gap-8 mt-12 pt-8 border-t border-white/10 animate-fade-in" style={{ animationDelay: '0.4s' }}>
             <div>
-              <div className="text-2xl font-bold text-ochre">50+</div>
-              <div className="text-cream/70 text-sm">
-                {locale === 'en' ? 'Unique Tours' : 'Circuits Uniques'}
-              </div>
+              <div className="text-3xl font-bold text-ochre">50+</div>
+              <div className="text-cream/70 text-sm">{locale === 'en' ? 'Unique Tours' : 'Circuits Uniques'}</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-ochre">1000+</div>
-              <div className="text-cream/70 text-sm">
-                {locale === 'en' ? 'Happy Travelers' : 'Voyageurs Satisfaits'}
-              </div>
+              <div className="text-3xl font-bold text-ochre">1000+</div>
+              <div className="text-cream/70 text-sm">{locale === 'en' ? 'Happy Travelers' : 'Voyageurs Satisfaits'}</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-ochre">15+</div>
-              <div className="text-cream/70 text-sm">
-                {locale === 'en' ? 'Destinations' : 'Destinations'}
-              </div>
+              <div className="text-3xl font-bold text-ochre">4.9★</div>
+              <div className="text-cream/70 text-sm">{locale === 'en' ? 'Average Rating' : 'Note Moyenne'}</div>
             </div>
+            <div>
+              <div className="text-3xl font-bold text-ochre">15+</div>
+              <div className="text-cream/70 text-sm">{locale === 'en' ? 'Destinations' : 'Destinations'}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-cream/30 animate-bounce">
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-xs uppercase tracking-widest">
+            {locale === 'en' ? 'Scroll' : 'Défiler'}
+          </span>
+          <div className="w-6 h-10 border-2 border-cream/20 rounded-full flex items-start justify-center p-1">
+            <div className="w-1.5 h-3 bg-cream/40 rounded-full" />
           </div>
         </div>
       </div>

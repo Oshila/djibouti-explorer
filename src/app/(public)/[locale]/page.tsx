@@ -1,8 +1,34 @@
-export default function HomePage() {
+import { Locale } from '@/types';
+import { HeroSection } from '@/components/home/HeroSection';
+import { FeaturedTours } from '@/components/home/FeaturedTours';
+import { DestinationsGrid } from '@/components/home/DestinationsGrid';
+import { WhyChooseUs } from '@/components/home/WhyChooseUs';
+import { SeasonalRecommendations } from '@/components/home/SeasonalRecommendations';
+import { CustomerReviews } from '@/components/home/CustomerReviews';
+import { WhatsAppCTA } from '@/components/shared/WhatsAppCTA';
+
+interface Props {
+  params: {
+    locale: Locale;
+  };
+}
+
+export default async function HomePage({ params }: Props) {
+  // Await the params object (needed in Next.js 15+)
+  const { locale } = await params;
+  
+  // Ensure locale is valid
+  const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
+
   return (
-    <div className="container-custom section-padding">
-      <h1 className="text-4xl font-heading text-teal">Djibouti Explorer</h1>
-      <p className="text-nearblack/70 mt-4">Welcome to Djibouti Explorer. Your adventure starts here.</p>
-    </div>
+    <>
+      <HeroSection locale={validLocale} />
+      <FeaturedTours locale={validLocale} />
+      <DestinationsGrid locale={validLocale} />
+      <WhyChooseUs locale={validLocale} />
+      <SeasonalRecommendations locale={validLocale} />
+      <CustomerReviews locale={validLocale} />
+      <WhatsAppCTA locale={validLocale} />
+    </>
   );
 }

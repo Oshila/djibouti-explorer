@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Locale } from '@/types';
+import { MapPinIcon } from '@heroicons/react/24/outline';
 
 interface Props {
   locale: Locale;
@@ -11,32 +12,38 @@ const destinations = [
   { 
     name: { en: 'Lake Assal', fr: 'Lac Assal' },
     slug: { en: 'lake-assal', fr: 'lac-assal' },
-    emoji: '🏞️'
+    description: { en: 'Lowest point in Africa', fr: 'Point le plus bas d\'Afrique' },
+    tours: 8,
   },
   { 
     name: { en: 'Lac Abbé', fr: 'Lac Abbé' },
     slug: { en: 'lac-abbe', fr: 'lac-abbe' },
-    emoji: '🌋'
+    description: { en: 'Limestone chimneys', fr: 'Cheminées de calcaire' },
+    tours: 6,
   },
   { 
     name: { en: 'Tadjoura Gulf', fr: 'Golfe de Tadjoura' },
     slug: { en: 'tadjoura-gulf', fr: 'golfe-tadjoura' },
-    emoji: '🐋'
+    description: { en: 'Whale shark paradise', fr: 'Paradis des requins-baleines' },
+    tours: 5,
   },
   { 
     name: { en: 'Day Forest', fr: 'Forêt du Day' },
     slug: { en: 'day-forest', fr: 'foret-day' },
-    emoji: '🌳'
+    description: { en: 'Unique biodiversity', fr: 'Biodiversité unique' },
+    tours: 4,
   },
   { 
     name: { en: 'Moucha Island', fr: 'Île Moucha' },
     slug: { en: 'moucha-island', fr: 'ile-moucha' },
-    emoji: '🏝️'
+    description: { en: 'Pristine beaches', fr: 'Plages immaculées' },
+    tours: 3,
   },
   { 
     name: { en: 'Ardoukoba', fr: 'Ardoukoba' },
     slug: { en: 'ardoukoba', fr: 'ardoukoba' },
-    emoji: '⛰️'
+    description: { en: 'Active volcano', fr: 'Volcan actif' },
+    tours: 3,
   },
 ];
 
@@ -45,7 +52,10 @@ export function DestinationsGrid({ locale }: Props) {
     <section className="section-padding bg-white">
       <div className="container-custom">
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <h2 className="text-3xl md:text-4xl font-heading text-teal mb-4">
+          <span className="text-terracotta font-medium text-sm uppercase tracking-wider">
+            {locale === 'en' ? 'Destinations' : 'Destinations'}
+          </span>
+          <h2 className="text-3xl md:text-4xl font-heading text-teal mt-2 mb-4">
             {locale === 'en' ? 'Explore Djibouti' : 'Explorez Djibouti'}
           </h2>
           <p className="text-nearblack/70 text-lg">
@@ -60,12 +70,23 @@ export function DestinationsGrid({ locale }: Props) {
             <Link
               key={dest.slug.en}
               href={`/${locale}/destinations/${dest.slug[locale]}`}
-              className="group bg-cream hover:bg-teal/5 rounded-xl p-6 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-cream hover:border-teal/20"
+              className="group bg-cream hover:bg-white rounded-xl p-6 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-cream hover:border-teal/20"
             >
-              <div className="text-4xl mb-3">{dest.emoji}</div>
-              <h3 className="font-medium text-nearblack group-hover:text-teal transition-colors text-sm">
+              <div className="w-12 h-12 mx-auto mb-3 text-teal/30 group-hover:text-teal transition-colors">
+                <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3.055 11.5a4.5 4.5 0 0 0 4.5-4.5 4.5 4.5 0 0 0 4.5 4.5 4.5 4.5 0 0 0-4.5 4.5 4.5 4.5 0 0 0-4.5-4.5z M3.055 11.5a4.5 4.5 0 0 1 4.5-4.5 4.5 4.5 0 0 1 4.5 4.5 4.5 4.5 0 0 1-4.5 4.5 4.5 4.5 0 0 1-4.5-4.5z M12 3.055a4.5 4.5 0 0 0 4.5-4.5 4.5 4.5 0 0 0 4.5 4.5 4.5 4.5 0 0 0-4.5 4.5 4.5 4.5 0 0 0-4.5-4.5z M12 3.055a4.5 4.5 0 0 1 4.5-4.5 4.5 4.5 0 0 1 4.5 4.5 4.5 4.5 0 0 1-4.5 4.5 4.5 4.5 0 0 1-4.5-4.5z" />
+                </svg>
+              </div>
+              <h3 className="font-heading text-base text-nearblack group-hover:text-teal transition-colors">
                 {dest.name[locale]}
               </h3>
+              <p className="text-xs text-nearblack/50 mt-1">
+                {dest.description[locale]}
+              </p>
+              <div className="mt-3 flex items-center justify-center gap-1 text-xs text-nearblack/40">
+                <MapPinIcon className="w-3 h-3" />
+                <span>{dest.tours} {locale === 'en' ? 'tours' : 'circuits'}</span>
+              </div>
             </Link>
           ))}
         </div>
