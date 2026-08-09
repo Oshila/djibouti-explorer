@@ -118,29 +118,32 @@ export function FeaturedToursCarousel({ locale, tours }: Props) {
   return (
     <section className="section-padding bg-cream">
       <div className="container-custom">
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8">
-          <div className="max-w-2xl">
-            <span className="text-terracotta font-medium text-sm uppercase tracking-wider">
-              {locale === 'en' ? 'Explore Our Tours' : 'Explorez Nos Circuits'}
-            </span>
-            <h2 className="text-3xl md:text-4xl font-heading text-teal mt-2 mb-4">
-              {locale === 'en' ? 'Featured Experiences' : 'Expériences Vedettes'}
-            </h2>
-            <p className="text-nearblack/70 text-lg">
-              {locale === 'en' 
-                ? 'Discover our most popular tours, handpicked by local experts.' 
-                : 'Découvrez nos circuits les plus populaires, sélectionnés par des experts locaux.'}
-            </p>
-          </div>
-          <Link
-            href={`/${locale}/tours`}
-            className="group flex items-center gap-2 text-teal hover:text-terracotta font-medium transition-colors mt-4 md:mt-0"
-          >
-            <span>{locale === 'en' ? 'View All Tours' : 'Voir Tous les Circuits'}</span>
-            <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
+{/* Section Header */}
+<div className="flex flex-col md:flex-row md:items-end justify-between mb-8">
+  <div className="max-w-2xl">
+    <span className="text-terracotta font-medium text-sm uppercase tracking-wider">
+      {locale === 'en' ? 'Explore Our Tours' : 'Explorez Nos Circuits'}
+    </span>
+    <h2 className="text-3xl md:text-4xl font-heading text-teal mt-2 mb-4">
+      {locale === 'en' ? 'Featured Experiences' : 'Expériences Vedettes'}
+    </h2>
+    <p className="text-nearblack/70 text-lg">
+      {locale === 'en' 
+        ? 'Discover our most popular tours, handpicked by local experts.' 
+        : 'Découvrez nos circuits les plus populaires, sélectionnés par des experts locaux.'}
+    </p>
+  </div>
+  
+  {/* View All Tours Button - BIG & OBVIOUS */}
+{/* View All Tours Button - Compact */}
+<Link
+  href={`/${locale}/tours`}
+  className="mt-4 md:mt-0 bg-terracotta hover:bg-terracotta/90 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2 whitespace-nowrap text-sm md:text-base"
+>
+  <span>{locale === 'en' ? 'View All Tours' : 'Voir Tous les Circuits'}</span>
+  <ArrowRightIcon className="w-4 h-4" />
+</Link>
+</div>
 
         {/* Carousel */}
         <div 

@@ -57,13 +57,24 @@ export function Footer({ locale }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           <div>
             <Link href={`/${locale}`} className="flex items-center gap-3">
-              <Image
-                src="/images/logo.jpg"
-                alt="Djibouti Explorer"
-                width={60}
-                height={40}
-                className="object-contain"
-              />
+              <div 
+                className="p-1 rounded-lg"
+                style={{ 
+                  backgroundColor: '#F6EEE1',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Image
+                  src="/images/logo.jpg"
+                  alt="Djibouti Explorer"
+                  width={60}
+                  height={35}
+                  className="object-contain"
+                />
+              </div>
               <h3 className="text-white font-heading text-xl">Djibouti Explorer</h3>
             </Link>
             <p className="text-cream/60 text-sm leading-relaxed mt-4">{t.company}</p>
@@ -104,7 +115,7 @@ export function Footer({ locale }: Props) {
             <ul className="space-y-3">
               <li className="flex items-center gap-3 text-sm">
                 <PhoneIcon className="w-4 h-4 text-ochre" />
-                <span className="text-cream/60">{process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+253 XX XX XX XX'}</span>
+                <span className="text-cream/60">{process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+253 77 86 26 39'}</span>
               </li>
               <li className="flex items-center gap-3 text-sm">
                 <EnvelopeIcon className="w-4 h-4 text-ochre" />

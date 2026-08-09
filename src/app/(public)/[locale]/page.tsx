@@ -6,6 +6,7 @@ import { Locale } from '@/types';
 import { db } from '@/lib/firebase/client';
 import { collection, getDocs, limit } from 'firebase/firestore';
 import { HeroSection } from '@/components/home/HeroSection';
+import { TripAdvisorBadge } from '@/components/home/TripAdvisorBadge';
 import { FeaturedToursCarousel } from '@/components/home/FeaturedToursCarousel';
 import { DestinationsGrid } from '@/components/home/DestinationsGrid';
 import { WhyChooseUs } from '@/components/home/WhyChooseUs';
@@ -140,16 +141,28 @@ export default function HomePage({ params }: Props) {
     );
   }
 
-  return (
-    <>
-      <HeroSection locale={validLocale} />
-      <FeaturedToursCarousel locale={validLocale} tours={tours} />
-      <GoogleMap locale={validLocale} />
-      <DestinationsGrid locale={validLocale} />
-      <WhyChooseUs locale={validLocale} />
-      <SeasonalRecommendations locale={validLocale} />
-      <CustomerReviews locale={validLocale} />
-      <WhatsAppCTA locale={validLocale} />
-    </>
-  );
+return (
+  <>
+    <HeroSection locale={validLocale} />
+    
+    {/* TripAdvisor Badge - Perfectly positioned */}
+    <div className="container-custom px-4 -mt-8 md:-mt-12 relative z-10">
+      <TripAdvisorBadge locale={validLocale} />
+    </div>
+    
+    <FeaturedToursCarousel locale={validLocale} tours={tours} />
+    <GoogleMap locale={validLocale} />
+    <DestinationsGrid locale={validLocale} />
+    <WhyChooseUs locale={validLocale} />
+    <SeasonalRecommendations locale={validLocale} />
+
+        {/* TripAdvisor Badge - Perfectly positioned */}
+    <div className="container-custom px-4 -mt-8 md:-mt-12 relative z-10">
+      <TripAdvisorBadge locale={validLocale} />
+    </div>
+    
+    <CustomerReviews locale={validLocale} />
+    <WhatsAppCTA locale={validLocale} />
+  </>
+);
 }
