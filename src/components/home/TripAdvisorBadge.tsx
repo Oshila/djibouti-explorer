@@ -27,7 +27,7 @@ export function TripAdvisorBadge({ locale }: Props) {
 
   return (
     <a
-      href="https://www.tripadvisor.com/Search?q=djibouti+explorer&geo=293787&searchNearby=false&searchSessionId=00096d5f6876b4a1.ssid"
+      href="https://www.tripadvisor.com/Attraction_Review-g293787-d34320815-Reviews-Djibouti_Explorer-Djibouti.html"
       target="_blank"
       rel="noopener noreferrer"
       className="block max-w-md mx-auto bg-white/95 backdrop-blur-sm rounded-xl shadow-lg px-6 py-4 border border-cream hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
