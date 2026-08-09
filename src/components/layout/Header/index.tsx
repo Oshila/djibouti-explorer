@@ -78,7 +78,7 @@ export function Header({ locale }: Props) {
             <div 
               className="p-1 rounded-lg"
               style={{ 
-                backgroundColor: '#F6EEE1',
+                backgroundColor: 'transparent',
                 borderRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',
@@ -86,9 +86,9 @@ export function Header({ locale }: Props) {
               }}
             >
               <Image
-                src="/images/logo.jpg"
+                src="/images/logo-removebg-preview.png"
                 alt="Djibouti Explorer"
-                width={70}
+                width={80}
                 height={45}
                 className="object-contain"
                 priority

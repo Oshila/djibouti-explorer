@@ -14,7 +14,7 @@ import { SeasonalRecommendations } from '@/components/home/SeasonalRecommendatio
 import { CustomerReviews } from '@/components/home/CustomerReviews';
 import { GoogleMap } from '@/components/home/GoogleMap';
 import { WhatsAppCTA } from '@/components/shared/WhatsAppCTA';
-
+import { OpenStreetMap } from '@/components/home/OpenStreetMap';
 interface Props {
   params: Promise<{
     locale: Locale;
@@ -151,7 +151,7 @@ return (
     </div>
     
     <FeaturedToursCarousel locale={validLocale} tours={tours} />
-    <GoogleMap locale={validLocale} />
+    <OpenStreetMap locale={validLocale} />
     <DestinationsGrid locale={validLocale} />
     <WhyChooseUs locale={validLocale} />
     <SeasonalRecommendations locale={validLocale} />
@@ -160,7 +160,7 @@ return (
     <div className="container-custom px-4 -mt-8 md:-mt-12 relative z-10">
       <TripAdvisorBadge locale={validLocale} />
     </div>
-    
+
     <CustomerReviews locale={validLocale} />
     <WhatsAppCTA locale={validLocale} />
   </>
