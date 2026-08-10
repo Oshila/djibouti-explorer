@@ -4,18 +4,20 @@ import { adminDb } from '@/lib/firebase/admin';
 export async function GET() {
   try {
     const snapshot = await adminDb.collection('tours').get();
-    const tours = snapshot.docs.map(doc => ({ 
-      id: doc.id, 
-      ...doc.data() 
+    const tours = snapshot.docs.map(doc => ({
+      id: doc.id,
+      title: doc.data().title?.en || 'Untitled',
+      slug: doc.data().slug?.en || 'No slug',
+      featured: doc.data().featured || false,
+      published: doc.data().published || false,
     }));
-    
+
     return NextResponse.json({
       success: true,
       count: tours.length,
-      tours: tours.slice(0, 5), // Show first 5
+      tours: tours,
     });
   } catch (error: any) {
-    console.error('Error checking tours:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 400 }

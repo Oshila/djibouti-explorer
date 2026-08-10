@@ -8,42 +8,79 @@ interface Props {
   locale: Locale;
 }
 
+// In production, this would come from Firebase
 const destinations = [
   { 
     name: { en: 'Lake Assal', fr: 'Lac Assal' },
     slug: { en: 'lake-assal', fr: 'lac-assal' },
+    image: '/images/destinations/lake-assal.jpg',
     description: { en: 'Lowest point in Africa', fr: 'Point le plus bas d\'Afrique' },
     tours: 8,
   },
   { 
     name: { en: 'Lac Abbé', fr: 'Lac Abbé' },
     slug: { en: 'lac-abbe', fr: 'lac-abbe' },
+    image: '/images/destinations/lac-abbe.jpg',
     description: { en: 'Limestone chimneys', fr: 'Cheminées de calcaire' },
     tours: 6,
   },
   { 
     name: { en: 'Tadjoura Gulf', fr: 'Golfe de Tadjoura' },
     slug: { en: 'tadjoura-gulf', fr: 'golfe-tadjoura' },
+    image: '/images/destinations/tadjoura-gulf.jpg',
     description: { en: 'Whale shark paradise', fr: 'Paradis des requins-baleines' },
     tours: 5,
   },
   { 
     name: { en: 'Day Forest', fr: 'Forêt du Day' },
     slug: { en: 'day-forest', fr: 'foret-day' },
+    image: '/images/destinations/day-forest.jpg',
     description: { en: 'Unique biodiversity', fr: 'Biodiversité unique' },
     tours: 4,
   },
-  { 
-    name: { en: 'Moucha Island', fr: 'Île Moucha' },
-    slug: { en: 'moucha-island', fr: 'ile-moucha' },
-    description: { en: 'Pristine beaches', fr: 'Plages immaculées' },
-    tours: 3,
-  },
+
   { 
     name: { en: 'Ardoukoba', fr: 'Ardoukoba' },
     slug: { en: 'ardoukoba', fr: 'ardoukoba' },
+    image: '/images/destinations/ardoukoba.jpg',
     description: { en: 'Active volcano', fr: 'Volcan actif' },
     tours: 3,
+  },
+  // NEW DESTINATIONS
+  { 
+    name: { en: 'Moucha Islands', fr: 'Îles Moucha' },
+    slug: { en: 'moucha-islands', fr: 'iles-moucha' },
+    image: '/images/destinations/moucha-islands.jpg',
+    description: { en: 'White sand beaches', fr: 'Plages de sable blanc' },
+    tours: 4,
+  },
+  { 
+    name: { en: 'Maskali Islands', fr: 'Îles Maskali' },
+    slug: { en: 'maskali-islands', fr: 'iles-maskali' },
+    image: '/images/destinations/maskali-islands.jpg',
+    description: { en: 'Calm waters', fr: 'Eaux calmes' },
+    tours: 3,
+  },
+  { 
+    name: { en: 'Seven Brothers Islands', fr: 'Îles des Sept Frères' },
+    slug: { en: 'seven-brothers-islands', fr: 'iles-sept-freres' },
+    image: '/images/destinations/seven-brothers.jpg',
+    description: { en: 'Seabird colonies', fr: 'Colonies d\'oiseaux marins' },
+    tours: 2,
+  },
+  { 
+    name: { en: 'Dittilou', fr: 'Dittilou' },
+    slug: { en: 'dittilou', fr: 'dittilou' },
+    image: '/images/destinations/dittilou.jpg',
+    description: { en: 'Sea turtles & coral', fr: 'Tortues & corail' },
+    tours: 2,
+  },
+  { 
+    name: { en: 'Allols', fr: 'Allols' },
+    slug: { en: 'allols', fr: 'allols' },
+    image: '/images/destinations/allols.jpg',
+    description: { en: 'Hidden coastal gem', fr: 'Joyau côtier caché' },
+    tours: 2,
   },
 ];
 
@@ -70,22 +107,39 @@ export function DestinationsGrid({ locale }: Props) {
             <Link
               key={dest.slug.en}
               href={`/${locale}/destinations/${dest.slug[locale]}`}
-              className="group bg-cream hover:bg-white rounded-xl p-6 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-cream hover:border-teal/20"
+              className="group bg-cream hover:bg-white rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-cream hover:border-teal/20"
             >
-              <div className="w-12 h-12 mx-auto mb-3 text-teal/30 group-hover:text-teal transition-colors">
-                <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3.055 11.5a4.5 4.5 0 0 0 4.5-4.5 4.5 4.5 0 0 0 4.5 4.5 4.5 4.5 0 0 0-4.5 4.5 4.5 4.5 0 0 0-4.5-4.5z M3.055 11.5a4.5 4.5 0 0 1 4.5-4.5 4.5 4.5 0 0 1 4.5 4.5 4.5 4.5 0 0 1-4.5 4.5 4.5 4.5 0 0 1-4.5-4.5z M12 3.055a4.5 4.5 0 0 0 4.5-4.5 4.5 4.5 0 0 0 4.5 4.5 4.5 4.5 0 0 0-4.5 4.5 4.5 4.5 0 0 0-4.5-4.5z M12 3.055a4.5 4.5 0 0 1 4.5-4.5 4.5 4.5 0 0 1 4.5 4.5 4.5 4.5 0 0 1-4.5 4.5 4.5 4.5 0 0 1-4.5-4.5z" />
-                </svg>
+              {/* Image */}
+              <div className="relative h-32 bg-gradient-to-br from-teal/10 to-terracotta/10 overflow-hidden">
+                {dest.image ? (
+                  <img
+                    src={dest.image}
+                    alt={dest.name[locale]}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-4xl">
+                    🏝️
+                  </div>
+                )}
               </div>
-              <h3 className="font-heading text-base text-nearblack group-hover:text-teal transition-colors">
-                {dest.name[locale]}
-              </h3>
-              <p className="text-xs text-nearblack/50 mt-1">
-                {dest.description[locale]}
-              </p>
-              <div className="mt-3 flex items-center justify-center gap-1 text-xs text-nearblack/40">
-                <MapPinIcon className="w-3 h-3" />
-                <span>{dest.tours} {locale === 'en' ? 'tours' : 'circuits'}</span>
+              
+              {/* Content */}
+              <div className="p-4 text-center">
+                <h3 className="font-heading text-sm text-nearblack group-hover:text-teal transition-colors">
+                  {dest.name[locale]}
+                </h3>
+                <p className="text-xs text-nearblack/50 mt-1">
+                  {dest.description[locale]}
+                </p>
+                <div className="mt-2 flex items-center justify-center gap-1 text-xs text-nearblack/40">
+                  <MapPinIcon className="w-3 h-3" />
+                  <span>{dest.tours} {locale === 'en' ? 'tours' : 'circuits'}</span>
+                </div>
               </div>
             </Link>
           ))}

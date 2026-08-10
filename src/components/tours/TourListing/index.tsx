@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Locale } from '@/types';
+import { db } from '@/lib/firebase/client';
+import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
 import { TourCard } from '../TourCard';
 import { TourFilters } from '../TourFilters';
 import { TourSearch } from '../TourSearch';
@@ -22,188 +24,53 @@ interface Props {
   };
 }
 
-// Mock data - will be replaced with Firebase
-const mockTours = [
-  {
-    id: '1',
-    title: { en: 'Lake Assal Discovery', fr: 'Découverte du Lac Assal' },
-    slug: { en: 'lake-assal-discovery', fr: 'decouverte-lac-assal' },
-    shortDescription: { 
-      en: 'Visit the lowest point in Africa and swim in the saltiest lake on Earth.',
-      fr: 'Visitez le point le plus bas d\'Afrique et nagez dans le lac le plus salé de la Terre.'
-    },
-    price: 150,
-    currency: 'USD',
-    duration: 1,
-    maxGroupSize: 8,
-    rating: 4.9,
-    reviewCount: 42,
-    categories: ['nature', 'adventure'],
-    destinations: ['Lake Assal'],
-    images: { primary: '/images/lake-assal.jpg' },
-    featured: true,
-  },
-  {
-    id: '2',
-    title: { en: 'Whale Shark Adventure', fr: 'Aventure Requin-Baleine' },
-    slug: { en: 'whale-shark-adventure', fr: 'aventure-requin-baleine' },
-    shortDescription: { 
-      en: 'Swim with gentle giants in the crystal-clear waters of the Gulf of Tadjoura.',
-      fr: 'Nagez avec les géants des mers dans les eaux cristallines du Golfe de Tadjoura.'
-    },
-    price: 250,
-    currency: 'USD',
-    duration: 1,
-    maxGroupSize: 10,
-    rating: 4.8,
-    reviewCount: 38,
-    categories: ['wildlife', 'adventure'],
-    destinations: ['Tadjoura Gulf'],
-    images: { primary: '/images/whale-shark.jpg' },
-    featured: true,
-  },
-  {
-    id: '3',
-    title: { en: 'Lac Abbé & Ardoukoba', fr: 'Lac Abbé & Ardoukoba' },
-    slug: { en: 'lac-abbe-ardoukoba', fr: 'lac-abbe-ardoukoba' },
-    shortDescription: { 
-      en: 'Discover the otherworldly limestone chimneys and hike the Ardoukoba volcano.',
-      fr: 'Découvrez les cheminées de calcaire d\'un autre monde et randonnez sur le volcan Ardoukoba.'
-    },
-    price: 350,
-    currency: 'USD',
-    duration: 2,
-    maxGroupSize: 6,
-    rating: 4.7,
-    reviewCount: 29,
-    categories: ['adventure', 'culture'],
-    destinations: ['Lac Abbé', 'Ardoukoba'],
-    images: { primary: '/images/lac-abbe.jpg' },
-    featured: true,
-  },
-  {
-    id: '4',
-    title: { en: 'Day Forest Trek', fr: 'Randonnée Forêt du Day' },
-    slug: { en: 'day-forest-trek', fr: 'randonnee-foret-day' },
-    shortDescription: { 
-      en: 'Trek through the lush Day Forest, home to unique flora and bird species.',
-      fr: 'Randonnez à travers la luxuriante Forêt du Day, abritant une flore et des espèces d\'oiseaux uniques.'
-    },
-    price: 180,
-    currency: 'USD',
-    duration: 1,
-    maxGroupSize: 12,
-    rating: 4.6,
-    reviewCount: 21,
-    categories: ['nature', 'hiking'],
-    destinations: ['Day Forest'],
-    images: { primary: '/images/day-forest.jpg' },
-    featured: false,
-  },
-  {
-    id: '5',
-    title: { en: 'Moucha & Maskali Islands', fr: 'Îles Moucha & Maskali' },
-    slug: { en: 'moucha-maskali-islands', fr: 'iles-moucha-maskali' },
-    shortDescription: { 
-      en: 'Escape to paradise on these stunning islands with pristine beaches and snorkeling.',
-      fr: 'Évadez-vous vers le paradis sur ces îles magnifiques avec des plages immaculées et du snorkeling.'
-    },
-    price: 220,
-    currency: 'USD',
-    duration: 1,
-    maxGroupSize: 15,
-    rating: 4.9,
-    reviewCount: 34,
-    categories: ['beach', 'relaxation'],
-    destinations: ['Moucha Island', 'Maskali Island'],
-    images: { primary: '/images/moucha-island.jpg' },
-    featured: false,
-  },
-  {
-    id: '6',
-    title: { en: 'Djibouti City Culture Tour', fr: 'Circuit Culturel Djibouti Ville' },
-    slug: { en: 'djibouti-city-culture-tour', fr: 'circuit-culturel-djibouti-ville' },
-    shortDescription: { 
-      en: 'Explore the vibrant markets, French colonial architecture, and rich history of the capital.',
-      fr: 'Explorez les marchés vibrants, l\'architecture coloniale française et la riche histoire de la capitale.'
-    },
-    price: 120,
-    currency: 'USD',
-    duration: 1,
-    maxGroupSize: 20,
-    rating: 4.5,
-    reviewCount: 18,
-    categories: ['culture', 'city'],
-    destinations: ['Djibouti City'],
-    images: { primary: '/images/djibouti-city.jpg' },
-    featured: false,
-  },
-  {
-    id: '7',
-    title: { en: 'Ardoukoba Volcano Hike', fr: 'Randonnée Volcan Ardoukoba' },
-    slug: { en: 'ardoukoba-volcano-hike', fr: 'randonnee-volcan-ardoukoba' },
-    shortDescription: { 
-      en: 'Hike the active Ardoukoba volcano and witness the dramatic landscapes of the Great Rift Valley.',
-      fr: 'Randonnez sur le volcan actif Ardoukoba et découvrez les paysages spectaculaires de la Vallée du Grand Rift.'
-    },
-    price: 280,
-    currency: 'USD',
-    duration: 2,
-    maxGroupSize: 8,
-    rating: 4.8,
-    reviewCount: 25,
-    categories: ['adventure', 'hiking'],
-    destinations: ['Ardoukoba'],
-    images: { primary: '/images/ardoukoba.jpg' },
-    featured: false,
-  },
-  {
-    id: '8',
-    title: { en: 'Gulf of Tadjoura Boat Tour', fr: 'Tour en Bateau Golfe de Tadjoura' },
-    slug: { en: 'gulf-tadjoura-boat-tour', fr: 'tour-bateau-golfe-tadjoura' },
-    shortDescription: { 
-      en: 'Explore the stunning coastline and marine life of the Gulf of Tadjoura by boat.',
-      fr: 'Explorez la magnifique côte et la vie marine du Golfe de Tadjoura en bateau.'
-    },
-    price: 190,
-    currency: 'USD',
-    duration: 1,
-    maxGroupSize: 12,
-    rating: 4.7,
-    reviewCount: 19,
-    categories: ['beach', 'wildlife'],
-    destinations: ['Tadjoura Gulf'],
-    images: { primary: '/images/tadjoura-boat.jpg' },
-    featured: false,
-  },
-];
-
 export function TourListing({ locale, filters }: Props) {
-  const [filteredTours, setFilteredTours] = useState(mockTours);
+  const [allTours, setAllTours] = useState<any[]>([]);
+  const [filteredTours, setFilteredTours] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
-  // Get unique destinations for filter
-  const destinations = [...new Set(mockTours.flatMap(t => t.destinations))];
-  const categories = [...new Set(mockTours.flatMap(t => t.categories))];
-  const durations = [1, 2, 3, 4, 5, 7];
+
+  // Fetch tours from Firebase
+  useEffect(() => {
+    async function fetchTours() {
+      try {
+        const q = query(
+          collection(db, 'tours'),
+          orderBy('createdAt', 'desc'),
+          limit(50)
+        );
+        const snapshot = await getDocs(q);
+        const tourData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setAllTours(tourData);
+        setFilteredTours(tourData);
+      } catch (error) {
+        console.error('Error fetching tours:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTours();
+  }, []);
 
   // Apply filters
   useEffect(() => {
-    let result = [...mockTours];
+    if (allTours.length === 0) return;
+
+    let result = [...allTours];
 
     // Search filter
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       result = result.filter(tour => 
-        tour.title[locale].toLowerCase().includes(searchLower) ||
-        tour.shortDescription[locale].toLowerCase().includes(searchLower)
+        tour.title?.[locale]?.toLowerCase().includes(searchLower) ||
+        tour.shortDescription?.[locale]?.toLowerCase().includes(searchLower)
       );
     }
 
     // Destination filter
     if (filters.destination) {
       result = result.filter(tour => 
-        tour.destinations.some(d => d.toLowerCase() === filters.destination?.toLowerCase())
+        tour.destinations?.some((d: string) => d.toLowerCase() === filters.destination?.toLowerCase())
       );
     }
 
@@ -216,7 +83,7 @@ export function TourListing({ locale, filters }: Props) {
     // Category filter
     if (filters.category) {
       result = result.filter(tour => 
-        tour.categories.some(c => c.toLowerCase() === filters.category?.toLowerCase())
+        tour.categories?.some((c: string) => c.toLowerCase() === filters.category?.toLowerCase())
       );
     }
 
@@ -233,7 +100,12 @@ export function TourListing({ locale, filters }: Props) {
     }
 
     setFilteredTours(result);
-  }, [filters, locale]);
+  }, [filters, allTours, locale]);
+
+  // Get unique values for filters
+  const destinations = [...new Set(allTours.flatMap(t => t.destinations || []))];
+  const categories = [...new Set(allTours.flatMap(t => t.categories || []))];
+  const durations = [...new Set(allTours.map(t => t.duration || 1))].sort();
 
   const totalTours = filteredTours.length;
   const content = {
@@ -256,6 +128,17 @@ export function TourListing({ locale, filters }: Props) {
   };
 
   const t = content[locale];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-teal border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-nearblack/60">Loading tours...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

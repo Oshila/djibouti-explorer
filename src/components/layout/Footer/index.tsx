@@ -60,7 +60,7 @@ export function Footer({ locale }: Props) {
               <div 
                 className="p-1 rounded-lg"
                 style={{ 
-                  backgroundColor: '#F6EEE1',
+                  backgroundColor: '#020202',
                   borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
@@ -68,10 +68,10 @@ export function Footer({ locale }: Props) {
                 }}
               >
                 <Image
-                  src="/images/logo.jpg"
+                  src="/images/logo-footer.jpg"
                   alt="Djibouti Explorer"
-                  width={60}
-                  height={35}
+                  width={80}
+                  height={45}
                   className="object-contain"
                 />
               </div>

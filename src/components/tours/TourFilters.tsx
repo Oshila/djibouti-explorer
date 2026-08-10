@@ -24,10 +24,10 @@ interface Props {
 
 export function TourFilters({ 
   locale, 
-  destinations, 
-  categories, 
-  durations, 
-  currentFilters 
+  destinations = [], 
+  categories = [], 
+  durations = [], 
+  currentFilters = {}
 }: Props) {
   const router = useRouter();
   const [expanded, setExpanded] = useState<string[]>(['destination', 'duration', 'price', 'category']);
@@ -122,6 +122,16 @@ export function TourFilters({
     );
   };
 
+  // If no filters available, show a message
+  if (destinations.length === 0 && categories.length === 0 && durations.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl p-6 shadow-md border border-cream">
+        <h3 className="font-heading text-xl text-teal mb-4">{t.filters}</h3>
+        <p className="text-sm text-nearblack/50">No filters available</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-2xl p-6 shadow-md border border-cream">
       <div className="flex items-center justify-between mb-4 pb-4 border-b border-cream">
@@ -135,58 +145,62 @@ export function TourFilters({
       </div>
 
       {/* Destination Filter */}
-      <FilterSection title={t.destination} id="destination">
-        <button
-          onClick={() => updateFilter('destination', '')}
-          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-            !currentFilters.destination 
-              ? 'bg-teal text-white' 
-              : 'hover:bg-cream'
-          }`}
-        >
-          {t.all}
-        </button>
-        {destinations.map((dest) => (
+      {destinations.length > 0 && (
+        <FilterSection title={t.destination} id="destination">
           <button
-            key={dest}
-            onClick={() => updateFilter('destination', dest)}
+            onClick={() => updateFilter('destination', '')}
             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-              isActive('destination', dest)
-                ? 'bg-teal text-white'
+              !currentFilters.destination 
+                ? 'bg-teal text-white' 
                 : 'hover:bg-cream'
             }`}
           >
-            {dest}
+            {t.all}
           </button>
-        ))}
-      </FilterSection>
+          {destinations.map((dest) => (
+            <button
+              key={dest}
+              onClick={() => updateFilter('destination', dest)}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                isActive('destination', dest)
+                  ? 'bg-teal text-white'
+                  : 'hover:bg-cream'
+              }`}
+            >
+              {dest}
+            </button>
+          ))}
+        </FilterSection>
+      )}
 
       {/* Duration Filter */}
-      <FilterSection title={t.duration} id="duration">
-        <button
-          onClick={() => updateFilter('duration', '')}
-          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-            !currentFilters.duration 
-              ? 'bg-teal text-white' 
-              : 'hover:bg-cream'
-          }`}
-        >
-          {t.all}
-        </button>
-        {durations.map((dur) => (
+      {durations.length > 0 && (
+        <FilterSection title={t.duration} id="duration">
           <button
-            key={dur}
-            onClick={() => updateFilter('duration', String(dur))}
+            onClick={() => updateFilter('duration', '')}
             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-              isActive('duration', String(dur))
-                ? 'bg-teal text-white'
+              !currentFilters.duration 
+                ? 'bg-teal text-white' 
                 : 'hover:bg-cream'
             }`}
           >
-            {dur} {t.days}
+            {t.all}
           </button>
-        ))}
-      </FilterSection>
+          {durations.map((dur) => (
+            <button
+              key={dur}
+              onClick={() => updateFilter('duration', String(dur))}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                isActive('duration', String(dur))
+                  ? 'bg-teal text-white'
+                  : 'hover:bg-cream'
+              }`}
+            >
+              {dur} {t.days}
+            </button>
+          ))}
+        </FilterSection>
+      )}
 
       {/* Price Filter */}
       <FilterSection title={t.price} id="price">
@@ -216,31 +230,33 @@ export function TourFilters({
       </FilterSection>
 
       {/* Category Filter */}
-      <FilterSection title={t.category} id="category">
-        <button
-          onClick={() => updateFilter('category', '')}
-          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-            !currentFilters.category 
-              ? 'bg-teal text-white' 
-              : 'hover:bg-cream'
-          }`}
-        >
-          {t.all}
-        </button>
-        {categories.map((cat) => (
+      {categories.length > 0 && (
+        <FilterSection title={t.category} id="category">
           <button
-            key={cat}
-            onClick={() => updateFilter('category', cat)}
+            onClick={() => updateFilter('category', '')}
             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-              isActive('category', cat)
-                ? 'bg-teal text-white'
+              !currentFilters.category 
+                ? 'bg-teal text-white' 
                 : 'hover:bg-cream'
             }`}
           >
-            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            {t.all}
           </button>
-        ))}
-      </FilterSection>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => updateFilter('category', cat)}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                isActive('category', cat)
+                  ? 'bg-teal text-white'
+                  : 'hover:bg-cream'
+              }`}
+            >
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </button>
+          ))}
+        </FilterSection>
+      )}
     </div>
   );
 }
