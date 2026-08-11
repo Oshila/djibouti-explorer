@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     await resend.emails.send({
       from: `${fromName} <${fromEmail}>`,
       to: [process.env.ADMIN_EMAIL || 'info@djiboutiexplorer.com'],
-      bcc: ['oshilarusimi@gmail.com'],
+      bcc: ['similoluwa1100@gmail.com'],
       subject: `New Tour Inquiry - ${reference}`,
       html: getAdminEmailHTML({
         name: data.name,
