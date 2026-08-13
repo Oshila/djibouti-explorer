@@ -10,8 +10,7 @@ import {
   GlobeAltIcon,
   HeartIcon,
   PlayIcon,
-  ShareIcon,
-  StarIcon
+  ShareIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 
@@ -56,6 +55,8 @@ export function Footer({ locale }: Props) {
   };
 
   const t = content[locale];
+  const whatsappNumber = '+25377862639';
+  const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\+/g, '')}`;
 
   return (
     <footer className="relative bg-nearblack text-cream/80 overflow-hidden">
@@ -143,9 +144,14 @@ export function Footer({ locale }: Props) {
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-sm group">
                 <PhoneIcon className="w-4 h-4 text-ochre mt-0.5 group-hover:scale-110 transition-transform flex-shrink-0" />
-                <span className="text-cream/50 hover:text-cream/80 transition-colors text-sm">
-                  {process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+253 77 86 26 39'}
-                </span>
+                <a 
+                  href={whatsappLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-cream/50 hover:text-cream/80 transition-colors text-sm"
+                >
+                  {whatsappNumber}
+                </a>
               </li>
               <li className="flex items-start gap-3 text-sm group">
                 <EnvelopeIcon className="w-4 h-4 text-ochre mt-0.5 group-hover:scale-110 transition-transform flex-shrink-0" />
@@ -169,24 +175,39 @@ export function Footer({ locale }: Props) {
               <span className="absolute -bottom-1 left-0 w-6 h-0.5 bg-ochre rounded-full" />
             </h4>
             
-            {/* TripAdvisor Badge */}
+            {/* TripAdvisor Badge - With Border */}
             <a
-              href="https://www.tripadvisor.com/Attraction_Review-g293787-d34320815-Reviews-Djibouti_Explorer-Djibouti.html"
+              href="https://www.tripadvisor.com/Search?q=djibouti+explorer&geo=293787&searchNearby=false&searchSessionId=00096d5f6876b4a1.ssid"
               target="_blank"
               rel="noopener noreferrer"
-              className="block bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/5 hover:border-ochre/30 transition-all duration-300 group"
+              className="block bg-white/5 backdrop-blur-sm rounded-xl p-4 border-2 border-ochre/20 hover:border-ochre/50 transition-all duration-300 group"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-bold text-white">TripAdvisor</div>
-                  <div className="flex items-center gap-0.5 text-ochre mt-0.5">
-                    {[...Array(5)].map((_, i) => (
-                      <StarSolidIcon key={i} className="w-3 h-3" />
-                    ))}
-                  </div>
-                  <div className="text-[10px] text-cream/40 mt-0.5">{t.tripadvisor}</div>
+              <div className="flex flex-col items-center text-center">
+                {/* TripAdvisor Image with Border */}
+                <div className="relative p-1 rounded-lg bg-gradient-to-r from-ochre/20 to-ochre/5 border border-ochre/10 mb-2">
+                  <Image
+                    src="/images/trip-advisor.jpg"
+                    alt="TripAdvisor"
+                    width={250}
+                    height={50}
+                    className="object-contain"
+                  />
                 </div>
-                <div className="bg-ochre/10 text-ochre text-[10px] font-medium px-2.5 py-1 rounded-full group-hover:bg-ochre/20 transition-colors whitespace-nowrap">
+                
+                {/* Stars */}
+                <div className="flex items-center gap-0.5 text-ochre mb-1">
+                  {[...Array(5)].map((_, i) => (
+                    <StarSolidIcon key={i} className="w-4 h-4" />
+                  ))}
+                </div>
+                
+                {/* Excellence Badge */}
+                <div className="text-[10px] text-cream/40 mb-2">
+                  {t.tripadvisor}
+                </div>
+                
+                {/* View Reviews Button */}
+                <div className="bg-ochre/10 text-ochre text-xs font-medium px-4 py-1.5 rounded-full group-hover:bg-ochre/20 transition-colors border border-ochre/10">
                   {t.viewReviews} →
                 </div>
               </div>
@@ -194,13 +215,13 @@ export function Footer({ locale }: Props) {
 
             {/* WhatsApp CTA - Compact */}
             <div className="mt-4">
-              <p className="text-cream/40 text-xs mb-2.5">
+              <p className="text-cream/40 text-xs mb-2.5 text-center">
                 {locale === 'en' 
                   ? 'Ready to explore Djibouti?' 
                   : 'Prêt à explorer Djibouti ?'}
               </p>
               <a
-                href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '25377862639'}`}
+                href={whatsappLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#128C7E] hover:to-[#075E54] text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 w-full"

@@ -143,7 +143,7 @@ const destinations = [
       en: 'Small island with calm waters, sea turtles, and colorful coral gardens.', 
       fr: 'Petite île avec des eaux calmes, des tortues marines et des jardins de corail colorés.' 
     },
-    tours: 2,
+    tours: 1,
   },
   { 
     name: { en: 'Allols', fr: 'Allols' },
@@ -155,7 +155,7 @@ const destinations = [
       en: 'Hidden coastal gem with pristine beaches and crystal-clear waters.', 
       fr: 'Joyau côtier caché avec des plages immaculées et des eaux cristallines.' 
     },
-    tours: 2,
+    tours: 1,
   },
 ];
 

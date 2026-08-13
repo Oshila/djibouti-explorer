@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { use } from 'react';
 import { Locale } from '@/types';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { 
   ArrowLeftIcon, 
   MapPinIcon, 
@@ -16,7 +15,7 @@ import {
   CompassIcon,
   BuildingIcon,
   SunriseIcon,
-  SaladIcon
+  LandPlotIcon
 } from 'lucide-react';
 
 interface Props {
@@ -26,7 +25,7 @@ interface Props {
   }>;
 }
 
-// Destination data - in production this would come from Firebase
+// Destination data
 const destinationsData = [
   { 
     name: { en: 'Lake Assal', fr: 'Lac Assal' },
@@ -123,7 +122,7 @@ const destinationsData = [
   { 
     name: { en: 'Moucha Islands', fr: 'Îles Moucha' },
     slug: { en: 'moucha-islands', fr: 'iles-moucha' },
-    icon: SaladIcon,
+    icon: SunriseIcon,
     iconColor: 'text-cyan-500',
     image: '/images/destinations/moucha-islands.jpg',
     description: { 
@@ -146,7 +145,7 @@ const destinationsData = [
   { 
     name: { en: 'Maskali Islands', fr: 'Îles Maskali' },
     slug: { en: 'maskali-islands', fr: 'iles-maskali' },
-    icon: SaladIcon,
+    icon: SunriseIcon,
     iconColor: 'text-blue-400',
     image: '/images/destinations/maskali-islands.jpg',
     description: { 
@@ -192,24 +191,24 @@ const destinationsData = [
   { 
     name: { en: 'Dittilou', fr: 'Dittilou' },
     slug: { en: 'dittilou', fr: 'dittilou' },
-    icon: SaladIcon,
+    icon: MountainIcon,
     iconColor: 'text-emerald-500',
     image: '/images/destinations/dittilou.jpg',
     description: { 
-      en: 'Small island with calm waters, sea turtles, and colorful coral gardens.', 
-      fr: 'Petite île avec des eaux calmes, des tortues marines et des jardins de corail colorés.' 
+      en: 'Mountain camp with waterfalls and green monkeys in the Goda Mountains.', 
+      fr: 'Camp de montagne avec cascades et singes verts dans les Monts Goda.' 
     },
     longDescription: {
-      en: 'Dittilou is a small island known for its calm waters, sea turtles, stingrays, and vibrant coral gardens. This hidden gem offers an intimate island experience away from the crowds.',
-      fr: 'Dittilou est une petite île connue pour ses eaux calmes, ses tortues marines, ses raies pastenagues et ses jardins de corail vibrants. Ce joyau caché offre une expérience insulaire intime loin de la foule.'
+      en: 'Dittilou is a mountain camp located in the Goda Mountains at over 600 meters altitude. The camp was established in 1988 and is surrounded by lush vegetation and abundant wildlife. The area is known for its spectacular waterfall, green monkeys, and cooler mountain climate. It is a popular base for hiking and exploring the Goda Mountains.',
+      fr: 'Dittilou est un camp de montagne situé dans les Monts Goda à plus de 600 mètres d\'altitude. Le camp a été créé en 1988 et est entouré d\'une végétation luxuriante et d\'une faune abondante. La région est connue pour sa cascade spectaculaire, ses singes verts et son climat montagnard plus frais. C\'est une base populaire pour la randonnée et l\'exploration des Monts Goda.'
     },
-    location: { en: 'Gulf of Tadjoura, Djibouti', fr: 'Golfe de Tadjoura, Djibouti' },
+    location: { en: 'Goda Mountains, Djibouti', fr: 'Monts Goda, Djibouti' },
     bestTime: { en: 'November to April', fr: 'Novembre à Avril' },
-    tours: 2,
-    coordinates: '11.68°N, 43.10°E',
+    tours: 1,
+    coordinates: '11.53°N, 42.55°E',
     highlights: {
-      en: ['Sea turtles', 'Coral gardens', 'Stingrays', 'Calm waters'],
-      fr: ['Tortues marines', 'Jardins de corail', 'Raies pastenagues', 'Eaux calmes']
+      en: ['Waterfall hike', 'Green monkey sightings', 'Mountain views', 'Traditional toukoul huts'],
+      fr: ['Randonnée à la cascade', 'Observation des singes verts', 'Vues sur les montagnes', 'Huttes traditionnelles toukoul']
     }
   },
   { 
@@ -267,7 +266,21 @@ function getDestinationBySlug(slug: string, locale: Locale) {
 function getToursForDestination(destinationName: string, locale: Locale) {
   if (!destinationName) return [];
   
-  const mockTours = [
+  // Dittilou specific tour
+  if (destinationName.toLowerCase() === 'dittilou') {
+    return [{
+      id: 'dittilou-mountain-day-trip',
+      title: {
+        en: 'Dittilou Mountain Day Trip',
+        fr: 'Excursion d\'une Journée à Dittilou'
+      },
+      price: 160,
+      duration: 1
+    }];
+  }
+  
+  // Other tours
+  const allTours = [
     { id: '1', title: { en: 'Lake Assal Discovery', fr: 'Découverte du Lac Assal' }, price: 150, duration: 1 },
     { id: '2', title: { en: 'Whale Shark Adventure', fr: 'Aventure Requin-Baleine' }, price: 250, duration: 1 },
     { id: '3', title: { en: 'Lac Abbé & Ardoukoba', fr: 'Lac Abbé & Ardoukoba' }, price: 350, duration: 2 },
@@ -275,7 +288,7 @@ function getToursForDestination(destinationName: string, locale: Locale) {
   
   const searchTerm = destinationName.toLowerCase();
   
-  return mockTours.filter(tour => {
+  return allTours.filter(tour => {
     const titleEn = tour.title.en?.toLowerCase() || '';
     const titleFr = tour.title.fr?.toLowerCase() || '';
     return titleEn.includes(searchTerm) || titleFr.includes(searchTerm);
@@ -302,7 +315,6 @@ export default function DestinationDetailPage({ params }: Props) {
   }
 
   const relatedTours = getToursForDestination(destination.name[validLocale], validLocale);
-  // icon component available on destination.icon if needed
 
   return (
     <div className="bg-cream min-h-screen">
@@ -384,19 +396,29 @@ export default function DestinationDetailPage({ params }: Props) {
               </h2>
               {relatedTours.length > 0 ? (
                 <div className="space-y-3">
-                  {relatedTours.map((tour) => (
-                    <Link
-                      key={tour.id}
-                      href={`/${validLocale}/tours/${tour.id === '1' ? 'lake-assal-discovery' : tour.id === '2' ? 'whale-shark-adventure' : 'lac-abbe-ardoukoba'}`}
-                      className="flex items-center justify-between p-4 bg-cream rounded-xl hover:bg-teal/5 transition-colors"
-                    >
-                      <div>
-                        <div className="font-medium text-teal">{tour.title[validLocale]}</div>
-                        <div className="text-sm text-nearblack/50">{tour.duration} {validLocale === 'en' ? 'day' : 'jour'}</div>
-                      </div>
-                      <div className="text-lg font-bold text-teal">${tour.price}</div>
-                    </Link>
-                  ))}
+                  {relatedTours.map((tour) => {
+                    const slugMap: Record<string, string> = {
+                      '1': 'lake-assal-discovery',
+                      '2': 'whale-shark-adventure',
+                      '3': 'lac-abbe-ardoukoba',
+                      'dittilou-mountain-day-trip': 'dittilou-mountain-day-trip'
+                    };
+                    const tourSlug = slugMap[tour.id] || 'lake-assal-discovery';
+                    
+                    return (
+                      <Link
+                        key={tour.id}
+                        href={`/${validLocale}/tours/${tourSlug}`}
+                        className="flex items-center justify-between p-4 bg-cream rounded-xl hover:bg-teal/5 transition-colors"
+                      >
+                        <div>
+                          <div className="font-medium text-teal">{tour.title[validLocale]}</div>
+                          <div className="text-sm text-nearblack/50">{tour.duration} {validLocale === 'en' ? 'day' : 'jour'}</div>
+                        </div>
+                        <div className="text-lg font-bold text-teal">${tour.price}</div>
+                      </Link>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-nearblack/60">
