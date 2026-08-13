@@ -177,7 +177,7 @@ export function Footer({ locale }: Props) {
             
             {/* TripAdvisor Badge - With Border */}
             <a
-              href="https://www.tripadvisor.com/Search?q=djibouti+explorer&geo=293787&searchNearby=false&searchSessionId=00096d5f6876b4a1.ssid"
+              href="https://www.tripadvisor.com/Attraction_Review-g293787-d34320815-Reviews-Djibouti_Explorer-Djibouti.html"
               target="_blank"
               rel="noopener noreferrer"
               className="block bg-white/5 backdrop-blur-sm rounded-xl p-4 border-2 border-ochre/20 hover:border-ochre/50 transition-all duration-300 group"
