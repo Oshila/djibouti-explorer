@@ -19,7 +19,8 @@ import {
   CheckIcon,
   XMarkIcon,
   ChevronUpIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  PhotoIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
 
@@ -90,7 +91,7 @@ export default function EditTourPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'itinerary' | 'details' | 'included' | 'faqs' | 'seo'>('itinerary');
+  const [activeTab, setActiveTab] = useState<'overview' | 'itinerary' | 'included' | 'reviews' | 'faq'>('overview');
 
   // Itinerary editing state
   const [editingItineraryIndex, setEditingItineraryIndex] = useState<number | null>(null);
@@ -123,17 +124,12 @@ export default function EditTourPage({
       setLoading(true);
       setError(null);
       
-      console.log('Fetching tour with ID:', id);
-      
       const docRef = doc(db, 'tours', id);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
         const data = docSnap.data();
-        console.log('Raw tour data:', data);
-        console.log('Itinerary data:', data.itinerary);
         
-        // Create tour with safe defaults for all fields
         const tourData: Tour = {
           id: docSnap.id,
           title: data.title || { en: '', fr: '' },
@@ -152,7 +148,7 @@ export default function EditTourPage({
           meetingPoint: data.meetingPoint || { en: '', fr: '' },
           images: data.images || { primary: '', gallery: [] },
           highlights: data.highlights || { en: [], fr: [] },
-          itinerary: data.itinerary || [], // ⭐ This should be an array
+          itinerary: data.itinerary || [],
           included: data.included || { en: [], fr: [] },
           excluded: data.excluded || { en: [], fr: [] },
           whatToBring: data.whatToBring || { en: [], fr: [] },
@@ -173,9 +169,6 @@ export default function EditTourPage({
           createdAt: data.createdAt || null,
           updatedAt: data.updatedAt || null,
         };
-        
-        console.log('Processed tour data:', tourData);
-        console.log('Processed itinerary:', tourData.itinerary);
         
         setTour(tourData);
       } else {
@@ -252,7 +245,7 @@ export default function EditTourPage({
       setTour({ ...tour, itinerary: updatedItinerary });
       setEditingItineraryIndex(null);
       toast.success('Itinerary updated!');
-      fetchTour(); // Refresh to get latest data
+      fetchTour();
     } catch (error) {
       console.error('Error updating itinerary:', error);
       toast.error('Failed to update itinerary');
@@ -280,58 +273,51 @@ export default function EditTourPage({
       });
       setTour({ ...tour, itinerary: renumbered });
       toast.success('Day deleted!');
-      fetchTour(); // Refresh to get latest data
+      fetchTour();
     } catch (error) {
       console.error('Error deleting day:', error);
       toast.error('Failed to delete day');
     }
   };
 
-const moveItineraryDay = async (index: number, direction: 'up' | 'down') => {
-  if (!tour) return;
-  
-  const newIndex = direction === 'up' ? index - 1 : index + 1;
-  
-  // Check if the move is valid
-  if (newIndex < 0 || newIndex >= tour.itinerary.length) {
-    toast.error('Cannot move further in this direction');
-    return;
-  }
+  const moveItineraryDay = async (index: number, direction: 'up' | 'down') => {
+    if (!tour) return;
+    
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (newIndex < 0 || newIndex >= tour.itinerary.length) {
+      toast.error('Cannot move further in this direction');
+      return;
+    }
 
-  // Create a copy of the itinerary
-  const updatedItinerary = [...tour.itinerary];
-  
-  // Remove the item at the current index
-  const [movedItem] = updatedItinerary.splice(index, 1);
-  
-  // Check if we actually got an item
-  if (!movedItem) {
-    toast.error('Failed to move day');
-    return;
-  }
-  
-  // Insert the item at the new position
-  updatedItinerary.splice(newIndex, 0, movedItem);
-  
-  // Re-number the days
-  const renumbered = updatedItinerary.map((item, i) => ({
-    ...item,
-    day: i + 1
-  }));
+    const updatedItinerary = [...tour.itinerary];
+    const [movedItem] = updatedItinerary.splice(index, 1);
+    
+    if (!movedItem) {
+      toast.error('Failed to move day');
+      return;
+    }
+    
+    updatedItinerary.splice(newIndex, 0, movedItem);
+    
+    const renumbered = updatedItinerary.map((item, i) => ({
+      ...item,
+      day: i + 1
+    }));
 
-  try {
-    await updateDoc(doc(db, 'tours', tour.id), {
-      itinerary: renumbered,
-      updatedAt: serverTimestamp()
-    });
-    setTour({ ...tour, itinerary: renumbered });
-    toast.success('Day moved!');
-    fetchTour(); // Refresh to get latest data
-  } catch (error) {
-    console.error('Error moving day:', error);
-    toast.error('Failed to move day');
-  }
-};
+    try {
+      await updateDoc(doc(db, 'tours', tour.id), {
+        itinerary: renumbered,
+        updatedAt: serverTimestamp()
+      });
+      setTour({ ...tour, itinerary: renumbered });
+      toast.success('Day moved!');
+      fetchTour();
+    } catch (error) {
+      console.error('Error moving day:', error);
+      toast.error('Failed to move day');
+    }
+  };
 
   // ============================================
   // INCLUDED/EXCLUDED FUNCTIONS
@@ -511,7 +497,7 @@ const moveItineraryDay = async (index: number, direction: 'up' | 'down') => {
         updatedAt: serverTimestamp()
       });
       toast.success('All changes saved successfully!');
-      fetchTour(); // Refresh to get latest data
+      fetchTour();
     } catch (error) {
       console.error('Error saving tour:', error);
       toast.error('Failed to save changes');
@@ -524,10 +510,325 @@ const moveItineraryDay = async (index: number, direction: 'up' | 'down') => {
   // RENDER FUNCTIONS
   // ============================================
 
-  const renderItineraryTab = () => {
+  // 📋 OVERVIEW TAB
+  const renderOverviewTab = () => {
     if (!tour) return null;
 
-    console.log('Rendering itinerary tab with:', tour.itinerary);
+    return (
+      <div className="space-y-6">
+        {/* Basic Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-nearblack/70 mb-1">
+              Title (EN) <span className="text-terracotta">*</span>
+            </label>
+            <input
+              type="text"
+              value={tour.title?.en || ''}
+              onChange={(e) => setTour({ ...tour, title: { ...tour.title, en: e.target.value } })}
+              className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
+              placeholder="e.g. Lake Assal Discovery"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-nearblack/70 mb-1">
+              Title (FR) <span className="text-terracotta">*</span>
+            </label>
+            <input
+              type="text"
+              value={tour.title?.fr || ''}
+              onChange={(e) => setTour({ ...tour, title: { ...tour.title, fr: e.target.value } })}
+              className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
+              placeholder="e.g. Découverte du Lac Assal"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-nearblack/70 mb-1">
+              Slug (EN) <span className="text-terracotta">*</span>
+            </label>
+            <input
+              type="text"
+              value={tour.slug?.en || ''}
+              onChange={(e) => setTour({ ...tour, slug: { ...tour.slug, en: e.target.value } })}
+              className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
+              placeholder="e.g. lake-assal-discovery"
+            />
+            <p className="text-xs text-nearblack/40 mt-1">URL-friendly version of the title (lowercase, hyphens instead of spaces)</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-nearblack/70 mb-1">
+              Slug (FR)
+            </label>
+            <input
+              type="text"
+              value={tour.slug?.fr || ''}
+              onChange={(e) => setTour({ ...tour, slug: { ...tour.slug, fr: e.target.value } })}
+              className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
+              placeholder="e.g. decouverte-lac-assal"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-nearblack/70 mb-1">
+            Short Description (EN)
+          </label>
+          <textarea
+            value={tour.shortDescription?.en || ''}
+            onChange={(e) => setTour({ 
+              ...tour, 
+              shortDescription: { ...tour.shortDescription, en: e.target.value } 
+            })}
+            className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none min-h-[60px]"
+            rows={2}
+            placeholder="Brief summary of the tour (used in cards and listings)"
+          />
+          <p className="text-xs text-nearblack/40 mt-1">
+            {tour.shortDescription?.en?.length || 0}/160 characters
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-nearblack/70 mb-1">
+            Full Description (EN)
+          </label>
+          <textarea
+            value={tour.description?.en || ''}
+            onChange={(e) => setTour({ 
+              ...tour, 
+              description: { ...tour.description, en: e.target.value } 
+            })}
+            className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none min-h-[150px]"
+            rows={5}
+            placeholder="Detailed description of the tour experience"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-nearblack/70 mb-1">
+            Full Description (FR)
+          </label>
+          <textarea
+            value={tour.description?.fr || ''}
+            onChange={(e) => setTour({ 
+              ...tour, 
+              description: { ...tour.description, fr: e.target.value } 
+            })}
+            className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none min-h-[150px]"
+            rows={5}
+            placeholder="Description détaillée de l'expérience du circuit"
+          />
+        </div>
+
+        {/* Pricing & Logistics */}
+        <div className="border-t border-cream pt-6">
+          <h3 className="text-md font-heading text-teal mb-4">Pricing & Logistics</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-nearblack/70 mb-1">
+                Price ($) <span className="text-terracotta">*</span>
+              </label>
+              <input
+                type="number"
+                value={tour.price || 0}
+                onChange={(e) => setTour({ ...tour, price: Number(e.target.value) })}
+                className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
+                step="0.01"
+                min="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-nearblack/70 mb-1">Deposit Type</label>
+              <select
+                value={tour.depositType || 'percentage'}
+                onChange={(e) => setTour({ ...tour, depositType: e.target.value as 'fixed' | 'percentage' })}
+                className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
+              >
+                <option value="percentage">Percentage of total</option>
+                <option value="fixed">Fixed amount</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-nearblack/70 mb-1">
+                {tour.depositType === 'percentage' ? 'Deposit %' : 'Deposit Amount ($)'}
+              </label>
+              <input
+                type="number"
+                value={tour.depositAmount || 0}
+                onChange={(e) => setTour({ ...tour, depositAmount: Number(e.target.value) })}
+                className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
+                step="0.01"
+                min="0"
+                max={tour.depositType === 'percentage' ? 100 : undefined}
+              />
+              {tour.depositType === 'percentage' && (
+                <p className="text-xs text-nearblack/40 mt-1">
+                  Customer will pay ${((tour.price || 0) * (tour.depositAmount || 0) / 100).toFixed(2)} upfront
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div>
+              <label className="block text-sm font-medium text-nearblack/70 mb-1">
+                Duration (days) <span className="text-terracotta">*</span>
+              </label>
+              <input
+                type="number"
+                value={tour.duration || 1}
+                onChange={(e) => setTour({ ...tour, duration: Number(e.target.value) })}
+                className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
+                min="1"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-nearblack/70 mb-1">
+                Max Group Size
+              </label>
+              <input
+                type="number"
+                value={tour.maxGroupSize || 1}
+                onChange={(e) => setTour({ ...tour, maxGroupSize: Number(e.target.value) })}
+                className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
+                min="1"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-nearblack/70 mb-1">
+                Minimum Age
+              </label>
+              <input
+                type="number"
+                value={tour.minAge || 0}
+                onChange={(e) => setTour({ ...tour, minAge: Number(e.target.value) })}
+                className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
+                min="0"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Categories & Difficulty */}
+        <div className="border-t border-cream pt-6">
+          <h3 className="text-md font-heading text-teal mb-4">Categories & Difficulty</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-nearblack/70 mb-1">Difficulty</label>
+              <select
+                value={tour.difficulty || 'moderate'}
+                onChange={(e) => setTour({ ...tour, difficulty: e.target.value as any })}
+                className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
+              >
+                <option value="easy">🟢 Easy</option>
+                <option value="moderate">🟡 Moderate</option>
+                <option value="challenging">🔴 Challenging</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-nearblack/70 mb-1">Categories</label>
+              <input
+                type="text"
+                value={tour.categories?.join(', ') || ''}
+                onChange={(e) => setTour({ 
+                  ...tour, 
+                  categories: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                })}
+                className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
+                placeholder="e.g. Adventure, Nature, Culture (comma separated)"
+              />
+              <p className="text-xs text-nearblack/40 mt-1">Comma-separated list of categories</p>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-nearblack/70 mb-1">Tags</label>
+            <input
+              type="text"
+              value={tour.tags?.join(', ') || ''}
+              onChange={(e) => setTour({ 
+                ...tour, 
+                tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+              })}
+              className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
+              placeholder="e.g. lake, volcano, whale shark, desert (comma separated)"
+            />
+            <p className="text-xs text-nearblack/40 mt-1">Used for search and filtering</p>
+          </div>
+        </div>
+
+        {/* Status Toggles */}
+        <div className="border-t border-cream pt-6">
+          <h3 className="text-md font-heading text-teal mb-4">Status</h3>
+          
+          <div className="flex flex-wrap gap-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={tour.published || false}
+                onChange={(e) => setTour({ ...tour, published: e.target.checked })}
+                className="w-4 h-4 rounded border-cream text-teal focus:ring-teal"
+              />
+              <span className="text-sm font-medium text-nearblack/70">Published</span>
+              <span className="text-xs text-nearblack/40">(Visible to customers)</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={tour.featured || false}
+                onChange={(e) => setTour({ ...tour, featured: e.target.checked })}
+                className="w-4 h-4 rounded border-cream text-teal focus:ring-teal"
+              />
+              <span className="text-sm font-medium text-nearblack/70">Featured</span>
+              <span className="text-xs text-nearblack/40">(Shown on homepage)</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Primary Image */}
+        <div className="border-t border-cream pt-6">
+          <h3 className="text-md font-heading text-teal mb-4">Primary Image</h3>
+          
+          <div>
+            <label className="block text-sm font-medium text-nearblack/70 mb-1">Image URL</label>
+            <input
+              type="text"
+              value={tour.images?.primary || ''}
+              onChange={(e) => setTour({ 
+                ...tour, 
+                images: { ...tour.images, primary: e.target.value } 
+              })}
+              className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
+              placeholder="https://res.cloudinary.com/... or /images/..."
+            />
+            <p className="text-xs text-nearblack/40 mt-1">Upload to Cloudinary or use a direct image URL</p>
+          </div>
+          
+          {tour.images?.primary && (
+            <div className="mt-2">
+              <img 
+                src={tour.images.primary} 
+                alt="Primary" 
+                className="w-32 h-32 object-cover rounded-lg border border-cream"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // 📅 ITINERARY TAB
+  const renderItineraryTab = () => {
+    if (!tour) return null;
 
     return (
       <div className="space-y-4">
@@ -676,7 +977,11 @@ const moveItineraryDay = async (index: number, direction: 'up' | 'down') => {
                     <div className="mt-3 flex flex-wrap gap-2">
                       <button
                         onClick={() => moveItineraryDay(index, 'up')}
-                        className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-1"
+                        className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${
+                          index === 0 
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                            : 'bg-gray-100 hover:bg-gray-200 text-nearblack'
+                        }`}
                         disabled={index === 0}
                       >
                         <ChevronUpIcon className="w-3.5 h-3.5" />
@@ -684,7 +989,11 @@ const moveItineraryDay = async (index: number, direction: 'up' | 'down') => {
                       </button>
                       <button
                         onClick={() => moveItineraryDay(index, 'down')}
-                        className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-1"
+                        className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${
+                          index === tour.itinerary.length - 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-gray-100 hover:bg-gray-200 text-nearblack'
+                        }`}
                         disabled={index === tour.itinerary.length - 1}
                       >
                         <ChevronDownIcon className="w-3.5 h-3.5" />
@@ -715,105 +1024,17 @@ const moveItineraryDay = async (index: number, direction: 'up' | 'down') => {
     );
   };
 
-  // ============================================
-  // OTHER RENDER FUNCTIONS (shortened)
-  // ============================================
-
-  const renderDetailsTab = () => {
-    if (!tour) return null;
-
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-nearblack/70 mb-1">Title (EN)</label>
-            <input
-              type="text"
-              value={tour.title?.en || ''}
-              onChange={(e) => setTour({ ...tour, title: { ...tour.title, en: e.target.value } })}
-              className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-nearblack/70 mb-1">Title (FR)</label>
-            <input
-              type="text"
-              value={tour.title?.fr || ''}
-              onChange={(e) => setTour({ ...tour, title: { ...tour.title, fr: e.target.value } })}
-              className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-nearblack/70 mb-1">Price ($)</label>
-            <input
-              type="number"
-              value={tour.price || 0}
-              onChange={(e) => setTour({ ...tour, price: Number(e.target.value) })}
-              className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
-              step="0.01"
-              min="0"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-nearblack/70 mb-1">Deposit Type</label>
-            <select
-              value={tour.depositType || 'percentage'}
-              onChange={(e) => setTour({ ...tour, depositType: e.target.value as 'fixed' | 'percentage' })}
-              className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
-            >
-              <option value="percentage">Percentage</option>
-              <option value="fixed">Fixed Amount</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-nearblack/70 mb-1">
-              {tour.depositType === 'percentage' ? 'Deposit %' : 'Deposit Amount ($)'}
-            </label>
-            <input
-              type="number"
-              value={tour.depositAmount || 0}
-              onChange={(e) => setTour({ ...tour, depositAmount: Number(e.target.value) })}
-              className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
-              step="0.01"
-              min="0"
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-4 pt-4 border-t border-cream">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={tour.published || false}
-              onChange={(e) => setTour({ ...tour, published: e.target.checked })}
-              className="w-4 h-4 rounded border-cream text-teal focus:ring-teal"
-            />
-            <span className="text-sm font-medium text-nearblack/70">Published</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={tour.featured || false}
-              onChange={(e) => setTour({ ...tour, featured: e.target.checked })}
-              className="w-4 h-4 rounded border-cream text-teal focus:ring-teal"
-            />
-            <span className="text-sm font-medium text-nearblack/70">Featured</span>
-          </label>
-        </div>
-      </div>
-    );
-  };
-
+  // ✅ INCLUDED/EXCLUDED TAB
   const renderIncludedTab = () => {
     if (!tour) return null;
 
     return (
       <div className="space-y-6">
+        {/* Included */}
         <div>
           <h3 className="text-lg font-heading text-olive mb-2">What's Included</h3>
+          <p className="text-sm text-nearblack/60 mb-4">Items included in the tour package</p>
+          
           <div className="space-y-2 mb-3">
             {(tour.included?.en || []).map((item, index) => (
               <div key={index} className="flex items-center justify-between bg-olive/5 px-3 py-2 rounded-lg">
@@ -832,6 +1053,7 @@ const moveItineraryDay = async (index: number, direction: 'up' | 'down') => {
               </div>
             ))}
           </div>
+
           <div className="flex gap-2">
             <input
               type="text"
@@ -858,8 +1080,11 @@ const moveItineraryDay = async (index: number, direction: 'up' | 'down') => {
           </div>
         </div>
 
-        <div>
+        {/* Excluded */}
+        <div className="border-t border-cream pt-6">
           <h3 className="text-lg font-heading text-terracotta mb-2">What's Not Included</h3>
+          <p className="text-sm text-nearblack/60 mb-4">Items excluded from the tour package</p>
+          
           <div className="space-y-2 mb-3">
             {(tour.excluded?.en || []).map((item, index) => (
               <div key={index} className="flex items-center justify-between bg-terracotta/5 px-3 py-2 rounded-lg">
@@ -878,6 +1103,7 @@ const moveItineraryDay = async (index: number, direction: 'up' | 'down') => {
               </div>
             ))}
           </div>
+
           <div className="flex gap-2">
             <input
               type="text"
@@ -907,7 +1133,45 @@ const moveItineraryDay = async (index: number, direction: 'up' | 'down') => {
     );
   };
 
-  const renderFaqsTab = () => {
+  // ⭐ REVIEWS TAB
+  const renderReviewsTab = () => {
+    if (!tour) return null;
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-heading text-teal">Reviews</h3>
+            <p className="text-sm text-nearblack/60">Manage customer reviews for this tour</p>
+          </div>
+          <div className="flex items-center gap-4 bg-cream/30 px-4 py-2 rounded-lg">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-amber-400">{tour.rating || 0}</div>
+              <div className="text-xs text-nearblack/50">Rating</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-teal">{tour.reviewCount || 0}</div>
+              <div className="text-xs text-nearblack/50">Reviews</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-cream/30 rounded-xl p-8 text-center">
+          <StarIcon className="w-12 h-12 text-amber-400 mx-auto mb-3" />
+          <p className="text-nearblack/60">Reviews will appear here once customers leave feedback.</p>
+          <p className="text-sm text-nearblack/40 mt-1">Customers can leave reviews after completing a booking.</p>
+        </div>
+
+        {/* Placeholder for future review moderation */}
+        <div className="border-t border-cream pt-4">
+          <p className="text-xs text-nearblack/40">Review moderation coming soon. You'll be able to approve, reject, and respond to reviews here.</p>
+        </div>
+      </div>
+    );
+  };
+
+  // ❓ FAQ TAB
+  const renderFaqTab = () => {
     if (!tour) return null;
 
     return (
@@ -1036,84 +1300,6 @@ const moveItineraryDay = async (index: number, direction: 'up' | 'down') => {
     );
   };
 
-  const renderSeoTab = () => {
-    if (!tour) return null;
-
-    return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-heading text-teal">SEO Settings</h3>
-        <p className="text-sm text-nearblack/60">Optimize this tour for search engines</p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-nearblack/70 mb-1">Meta Title (EN)</label>
-            <input
-              type="text"
-              value={tour.metaTitle?.en || ''}
-              onChange={(e) => setTour({ 
-                ...tour, 
-                metaTitle: { ...tour.metaTitle, en: e.target.value } 
-              })}
-              className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-nearblack/70 mb-1">Meta Title (FR)</label>
-            <input
-              type="text"
-              value={tour.metaTitle?.fr || ''}
-              onChange={(e) => setTour({ 
-                ...tour, 
-                metaTitle: { ...tour.metaTitle, fr: e.target.value } 
-              })}
-              className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-nearblack/70 mb-1">Meta Description (EN)</label>
-          <textarea
-            value={tour.metaDescription?.en || ''}
-            onChange={(e) => setTour({ 
-              ...tour, 
-              metaDescription: { ...tour.metaDescription, en: e.target.value } 
-            })}
-            className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none min-h-[80px]"
-            rows={2}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-nearblack/70 mb-1">Meta Description (FR)</label>
-          <textarea
-            value={tour.metaDescription?.fr || ''}
-            onChange={(e) => setTour({ 
-              ...tour, 
-              metaDescription: { ...tour.metaDescription, fr: e.target.value } 
-            })}
-            className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none min-h-[80px]"
-            rows={2}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-nearblack/70 mb-1">Tags</label>
-          <input
-            type="text"
-            value={tour.tags?.join(', ') || ''}
-            onChange={(e) => setTour({ 
-              ...tour, 
-              tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-            })}
-            className="w-full px-3 py-2 border border-cream rounded-lg focus:border-teal outline-none"
-            placeholder="e.g. adventure, lake assal, whale shark (comma separated)"
-          />
-        </div>
-      </div>
-    );
-  };
-
   // ============================================
   // MAIN RENDER
   // ============================================
@@ -1177,11 +1363,11 @@ const moveItineraryDay = async (index: number, direction: 'up' | 'down') => {
       {/* Tabs */}
       <div className="flex flex-wrap gap-2 mb-6 border-b border-cream pb-4">
         {[
+          { id: 'overview', label: '📋 Overview' },
           { id: 'itinerary', label: '📅 Itinerary' },
-          { id: 'details', label: '📋 Details' },
-          { id: 'included', label: '✅ Included/Excluded' },
-          { id: 'faqs', label: '❓ FAQs' },
-          { id: 'seo', label: '🔍 SEO' },
+          { id: 'included', label: '✅ Included' },
+          { id: 'reviews', label: '⭐ Reviews' },
+          { id: 'faq', label: '❓ FAQ' },
         ].map(tab => (
           <button
             key={tab.id}
@@ -1199,11 +1385,11 @@ const moveItineraryDay = async (index: number, direction: 'up' | 'down') => {
 
       {/* Tab Content */}
       <div className="bg-white rounded-xl shadow-sm p-6">
+        {activeTab === 'overview' && renderOverviewTab()}
         {activeTab === 'itinerary' && renderItineraryTab()}
-        {activeTab === 'details' && renderDetailsTab()}
         {activeTab === 'included' && renderIncludedTab()}
-        {activeTab === 'faqs' && renderFaqsTab()}
-        {activeTab === 'seo' && renderSeoTab()}
+        {activeTab === 'reviews' && renderReviewsTab()}
+        {activeTab === 'faq' && renderFaqTab()}
       </div>
     </div>
   );
