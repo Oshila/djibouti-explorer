@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Locale } from '@/types';
-import { 
+import {
   ClockIcon,
   UserGroupIcon,
   StarIcon,
@@ -19,15 +19,15 @@ interface Props {
 
 export function TourCard({ tour, locale }: Props) {
   const [imageError, setImageError] = useState(false);
-  
+
   const getImagePath = (path: string) => {
     if (!path) return null;
     if (path.startsWith('/')) return path;
     return `/images/tours/${path}`;
   };
 
-  const primaryImage = tour.images?.primary 
-    ? getImagePath(tour.images.primary) 
+  const primaryImage = tour.images?.primary
+    ? getImagePath(tour.images.primary)
     : null;
 
   return (
@@ -52,10 +52,10 @@ export function TourCard({ tour, locale }: Props) {
             </svg>
           </div>
         )}
-        
+
         {/* Overlay Gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        
+
         {/* Quick View Button - Appears on Hover */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
           <span className="bg-white/90 backdrop-blur-sm text-teal font-medium px-6 py-3 rounded-full shadow-lg hover:bg-white transition-colors">
@@ -85,9 +85,16 @@ export function TourCard({ tour, locale }: Props) {
         </div>
 
         {/* Duration Badge - Bottom Right Overlay */}
+        {/* Duration Badge - Bottom Right Overlay */}
         <div className="absolute bottom-4 right-4 z-10 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 text-sm">
           <ClockIcon className="w-4 h-4" />
-          <span>{tour.duration || 1} {locale === 'en' ? 'day' : 'jour'}</span>
+          <span>
+            {tour.duration === 1 ? (
+              '1 Day'
+            ) : (
+              `${tour.duration} Days / ${tour.duration - 1} Nights`
+            )}
+          </span>
         </div>
       </div>
 

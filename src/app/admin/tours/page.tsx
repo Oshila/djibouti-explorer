@@ -22,9 +22,7 @@ import {
   EyeSlashIcon,
   StarIcon,
   StarIcon as StarOutlineIcon,
-  DocumentDuplicateIcon,
-  CheckCircleIcon,
-  XCircleIcon
+  DocumentDuplicateIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 
@@ -61,10 +59,25 @@ export default function AdminTours() {
     try {
       const q = query(collection(db, 'tours'), orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
-      const tourData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Tour[];
+      const tourData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title || { en: 'Untitled', fr: 'Sans titre' },
+          price: data.price || 0,
+          slug: data.slug || { en: 'untitled', fr: 'sans-titre' },
+          published: data.published || false,
+          featured: data.featured || false,
+          duration: data.duration || 1,
+          maxGroupSize: data.maxGroupSize || 10,
+          rating: data.rating || 0,
+          reviewCount: data.reviewCount || 0,
+          categories: data.categories || [],
+          images: data.images || { primary: '' },
+          createdAt: data.createdAt || null,
+          updatedAt: data.updatedAt || null,
+        } as Tour;
+      });
       setTours(tourData);
     } catch (error) {
       console.error('Error fetching tours:', error);
@@ -75,8 +88,8 @@ export default function AdminTours() {
   };
 
   const filteredTours = tours.filter(tour => {
-    const matchesSearch = tour.title.en.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         tour.title.fr.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (tour.title?.en || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (tour.title?.fr || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || 
                          (filterStatus === 'published' && tour.published) ||
                          (filterStatus === 'draft' && !tour.published);
@@ -144,12 +157,12 @@ export default function AdminTours() {
       const newTour = {
         ...tourData,
         title: {
-          en: `${tour.title.en} (Copy)`,
-          fr: `${tour.title.fr} (Copie)`
+          en: `${tour.title?.en || 'Tour'} (Copy)`,
+          fr: `${tour.title?.fr || 'Circuit'} (Copie)`
         },
         slug: {
-          en: `${tour.slug.en}-copy`,
-          fr: `${tour.slug.fr}-copie`
+          en: `${tour.slug?.en || 'tour'}-copy`,
+          fr: `${tour.slug?.fr || 'circuit'}-copie`
         },
         featured: false,
         published: false,
@@ -225,7 +238,9 @@ export default function AdminTours() {
           <div className="text-xs text-nearblack/50">Featured</div>
         </div>
         <div className="bg-white rounded-xl p-4 text-center shadow-sm">
-          <div className="text-2xl font-bold text-amber-500">{tours.reduce((sum, t) => sum + (t.rating || 0), 0) / tours.length || 0}</div>
+          <div className="text-2xl font-bold text-amber-500">
+            {tours.length > 0 ? (tours.reduce((sum, t) => sum + (t.rating || 0), 0) / tours.length).toFixed(1) : '0'}
+          </div>
           <div className="text-xs text-nearblack/50">Avg Rating</div>
         </div>
         <div className="bg-white rounded-xl p-4 text-center shadow-sm">
@@ -337,12 +352,12 @@ export default function AdminTours() {
                         </div>
                       )}
                       <div>
-                        <div className="font-medium text-nearblack">{tour.title.en}</div>
-                        <div className="text-xs text-nearblack/50">{tour.slug.en}</div>
+                        <div className="font-medium text-nearblack">{tour.title?.en || 'Untitled'}</div>
+                        <div className="text-xs text-nearblack/50">{tour.slug?.en || 'no-slug'}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-4 font-medium text-teal">${tour.price}</td>
+                  <td className="px-4 py-4 font-medium text-teal">${tour.price || 0}</td>
                   <td className="px-4 py-4">
                     <span className={`text-xs px-3 py-1 rounded-full font-medium ${
                       tour.published ? 'bg-olive/10 text-olive' : 'bg-ochre/10 text-ochre'

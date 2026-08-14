@@ -256,25 +256,31 @@ export default function TourDetail({ tour, locale }: Props) {
                     )}
 
                     {/* Quick Info Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-cream">
-                      <div>
-                        <div className="text-xs text-nearblack/50 uppercase tracking-wider">{locale === 'en' ? 'Duration' : 'Durée'}</div>
-                        <div className="font-medium text-teal">{tour.duration} {locale === 'en' ? 'day' : 'jour'}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-nearblack/50 uppercase tracking-wider">{locale === 'en' ? 'Group Size' : 'Taille du Groupe'}</div>
-                        <div className="font-medium text-teal">Max {tour.maxGroupSize}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-nearblack/50 uppercase tracking-wider">{locale === 'en' ? 'Difficulty' : 'Difficulté'}</div>
-                        <div className="font-medium text-teal capitalize">{tour.difficulty || 'Easy'}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-nearblack/50 uppercase tracking-wider">{locale === 'en' ? 'Min Age' : 'Âge Minimum'}</div>
-                        <div className="font-medium text-teal">{tour.minAge || 0}+</div>
-                      </div>
-                    </div>
-
+ {/* Quick Info */}
+<div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-cream">
+  <div>
+    <div className="text-xs text-nearblack/50 uppercase tracking-wider">{locale === 'en' ? 'Duration' : 'Durée'}</div>
+    <div className="font-medium text-teal">
+      {tour.duration === 1 ? (
+        '1 Day'
+      ) : (
+        `${tour.duration} Days / ${tour.duration - 1} Nights`
+      )}
+    </div>
+  </div>
+  <div>
+    <div className="text-xs text-nearblack/50 uppercase tracking-wider">{locale === 'en' ? 'Group Size' : 'Taille du Groupe'}</div>
+    <div className="font-medium text-teal">Max {tour.maxGroupSize}</div>
+  </div>
+  <div>
+    <div className="text-xs text-nearblack/50 uppercase tracking-wider">{locale === 'en' ? 'Difficulty' : 'Difficulté'}</div>
+    <div className="font-medium text-teal capitalize">{tour.difficulty || 'Easy'}</div>
+  </div>
+  <div>
+    <div className="text-xs text-nearblack/50 uppercase tracking-wider">{locale === 'en' ? 'Min Age' : 'Âge Minimum'}</div>
+    <div className="font-medium text-teal">{tour.minAge || 0}+</div>
+  </div>
+</div>
                     {/* Meeting Point */}
                     {tour.meetingPoint?.[locale] && (
                       <div className="bg-cream/50 rounded-2xl p-5 border border-cream">

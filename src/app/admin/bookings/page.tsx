@@ -1,76 +1,264 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { db } from '@/lib/firebase/client';
+import { 
+  collection, 
+  query, 
+  getDocs, 
+  doc, 
+  updateDoc,
+  orderBy 
+} from 'firebase/firestore';
+import toast from 'react-hot-toast';
+import { 
+  CheckCircleIcon,
+  XCircleIcon,
+  ClockIcon,
+  MagnifyingGlassIcon,
+  EyeIcon
+} from '@heroicons/react/24/outline';
+
+interface Booking {
+  id: string;
+  bookingReference: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  tourName: string;
+  tourId: string;
+  travelDate: string;
+  totalAmount: number;
+  depositAmount: number;
+  bookingStatus: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  paymentStatus: 'pending' | 'deposit_paid' | 'fully_paid' | 'refunded';
+  specialRequests?: string;
+  createdAt: any;
+}
 
 export default function AdminBookings() {
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
-    const auth = localStorage.getItem('adminAuth');
-    if (auth === 'true') {
-      setAuthenticated(true);
-    } else {
-      window.location.href = '/admin/login';
-    }
+    fetchBookings();
   }, []);
 
-  if (authenticated === null) {
+  const fetchBookings = async () => {
+    try {
+      const q = query(collection(db, 'bookings'), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Booking[];
+      setBookings(data);
+      setFilteredBookings(data);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      toast.error('Failed to load bookings');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let result = bookings;
+    
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      result = result.filter(booking => 
+        booking.customerName?.toLowerCase().includes(search) ||
+        booking.bookingReference?.toLowerCase().includes(search) ||
+        booking.tourName?.toLowerCase().includes(search)
+      );
+    }
+    
+    if (statusFilter !== 'all') {
+      result = result.filter(booking => booking.bookingStatus === statusFilter);
+    }
+    
+    setFilteredBookings(result);
+  }, [searchTerm, statusFilter, bookings]);
+
+  const updateBookingStatus = async (id: string, status: string) => {
+    try {
+      await updateDoc(doc(db, 'bookings', id), {
+        bookingStatus: status,
+        updatedAt: new Date().toISOString()
+      });
+      toast.success(`Booking ${status}`);
+      fetchBookings();
+    } catch (error) {
+      toast.error('Failed to update booking');
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors = {
+      confirmed: 'bg-olive text-white',
+      pending: 'bg-ochre text-nearblack',
+      cancelled: 'bg-terracotta text-white',
+      completed: 'bg-teal text-white',
+    };
+    return colors[status as keyof typeof colors] || 'bg-gray-300';
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-cream">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-teal border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="mt-4 text-nearblack/60">Loading...</p>
+          <p className="mt-4 text-nearblack/60">Loading bookings...</p>
         </div>
       </div>
     );
   }
 
-  const bookings = [
-    { id: 'DB-001', customer: 'John Doe', tour: 'Lake Assal Discovery', date: '2025-01-15', status: 'Confirmed', amount: 150 },
-    { id: 'DB-002', customer: 'Jane Smith', tour: 'Whale Shark Adventure', date: '2025-01-16', status: 'Pending', amount: 250 },
-    { id: 'DB-003', customer: 'Mike Johnson', tour: 'Lac Abbé & Ardoukoba', date: '2025-01-18', status: 'Confirmed', amount: 350 },
-  ];
-
   return (
-    <div className="min-h-screen bg-cream p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-heading text-teal">Bookings</h1>
-          <p className="text-nearblack/60">Manage all customer bookings</p>
-        </div>
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-heading text-teal">Bookings</h1>
+        <p className="text-nearblack/60">{bookings.length} bookings total</p>
+      </div>
 
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      {/* Filters */}
+      <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-nearblack/40 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search by name, reference, or tour..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-cream focus:border-teal outline-none"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 rounded-lg border border-cream focus:border-teal outline-none"
+          >
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+          <div className="text-2xl font-bold text-teal">{bookings.length}</div>
+          <div className="text-xs text-nearblack/50">Total</div>
+        </div>
+        <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+          <div className="text-2xl font-bold text-ochre">{bookings.filter(b => b.bookingStatus === 'pending').length}</div>
+          <div className="text-xs text-nearblack/50">Pending</div>
+        </div>
+        <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+          <div className="text-2xl font-bold text-olive">{bookings.filter(b => b.bookingStatus === 'confirmed').length}</div>
+          <div className="text-xs text-nearblack/50">Confirmed</div>
+        </div>
+        <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+          <div className="text-2xl font-bold text-terracotta">{bookings.filter(b => b.bookingStatus === 'cancelled').length}</div>
+          <div className="text-xs text-nearblack/50">Cancelled</div>
+        </div>
+      </div>
+
+      {/* Bookings List */}
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-cream/50">
               <tr>
-                <th className="text-left px-6 py-3 text-xs font-medium text-nearblack/50">Booking ID</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-nearblack/50">Customer</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-nearblack/50">Tour</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-nearblack/50">Date</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-nearblack/50">Status</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-nearblack/50">Amount</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-nearblack/50 uppercase">Reference</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-nearblack/50 uppercase">Customer</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-nearblack/50 uppercase">Tour</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-nearblack/50 uppercase">Date</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-nearblack/50 uppercase">Amount</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-nearblack/50 uppercase">Status</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-nearblack/50 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-cream">
-              {bookings.map((booking) => (
-                <tr key={booking.id} className="hover:bg-cream/30">
-                  <td className="px-6 py-4 font-mono text-sm text-teal">{booking.id}</td>
-                  <td className="px-6 py-4">{booking.customer}</td>
-                  <td className="px-6 py-4">{booking.tour}</td>
-                  <td className="px-6 py-4">{booking.date}</td>
+              {filteredBookings.map((booking) => (
+                <tr key={booking.id} className="hover:bg-cream/30 transition-colors">
+                  <td className="px-6 py-4 text-sm font-mono text-teal">{booking.bookingReference || booking.id.slice(0, 8)}</td>
                   <td className="px-6 py-4">
-                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                      booking.status === 'Confirmed' ? 'bg-olive/10 text-olive' : 'bg-ochre/10 text-ochre'
-                    }`}>
-                      {booking.status}
+                    <div>
+                      <div className="text-sm font-medium text-nearblack">{booking.customerName || 'N/A'}</div>
+                      <div className="text-xs text-nearblack/50">{booking.customerEmail || ''}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-nearblack">{booking.tourName || 'N/A'}</td>
+                  <td className="px-6 py-4 text-sm text-nearblack">
+                    {booking.travelDate ? new Date(booking.travelDate).toLocaleDateString() : 'N/A'}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-teal">${booking.totalAmount || 0}</div>
+                    <div className="text-xs text-nearblack/50">Deposit: ${booking.depositAmount || 0}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`text-xs px-3 py-1 rounded-full font-medium capitalize ${getStatusColor(booking.bookingStatus)}`}>
+                      {booking.bookingStatus || 'pending'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 font-medium text-teal">${booking.amount}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-1">
+                      <Link
+                        href={`/admin/bookings/${booking.id}`}
+                        className="p-2 hover:bg-cream rounded-lg transition-colors"
+                        title="View Details"
+                      >
+                        <EyeIcon className="w-4 h-4 text-nearblack/60" />
+                      </Link>
+                      {booking.bookingStatus === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                            className="p-2 hover:bg-olive/10 rounded-lg transition-colors"
+                            title="Confirm"
+                          >
+                            <CheckCircleIcon className="w-4 h-4 text-olive" />
+                          </button>
+                          <button
+                            onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                            className="p-2 hover:bg-terracotta/10 rounded-lg transition-colors"
+                            title="Cancel"
+                          >
+                            <XCircleIcon className="w-4 h-4 text-terracotta" />
+                          </button>
+                        </>
+                      )}
+                      {booking.bookingStatus === 'confirmed' && (
+                        <button
+                          onClick={() => updateBookingStatus(booking.id, 'completed')}
+                          className="p-2 hover:bg-teal/10 rounded-lg transition-colors"
+                          title="Mark Complete"
+                        >
+                          <ClockIcon className="w-4 h-4 text-teal" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        {filteredBookings.length === 0 && (
+          <div className="p-8 text-center text-nearblack/40">
+            <p>No bookings found.</p>
+          </div>
+        )}
       </div>
     </div>
   );
