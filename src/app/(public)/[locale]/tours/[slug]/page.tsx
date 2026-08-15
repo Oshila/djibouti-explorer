@@ -10,6 +10,32 @@ interface Props {
   };
 }
 
+// ⭐ Convert Firestore Timestamps to plain objects
+function convertTimestamps(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  
+  // Handle Firestore Timestamp (has toDate method)
+  if (typeof obj === 'object' && obj.toDate && typeof obj.toDate === 'function') {
+    return obj.toDate().toISOString();
+  }
+  
+  // Handle Arrays
+  if (Array.isArray(obj)) {
+    return obj.map(item => convertTimestamps(item));
+  }
+  
+  // Handle Objects
+  if (typeof obj === 'object') {
+    const result: any = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = convertTimestamps(obj[key]);
+    }
+    return result;
+  }
+  
+  return obj;
+}
+
 async function getTourBySlug(slug: string, locale: Locale) {
   try {
     // Try English slug first
@@ -23,7 +49,12 @@ async function getTourBySlug(slug: string, locale: Locale) {
     if (!snapshot.empty) {
       const doc = snapshot.docs[0];
       if (doc) {
-        return { id: doc.id, ...doc.data() };
+        const data = doc.data();
+        // ⭐ Convert timestamps and return plain object
+        return { 
+          id: doc.id, 
+          ...convertTimestamps(data) 
+        };
       }
     }
     
@@ -38,7 +69,12 @@ async function getTourBySlug(slug: string, locale: Locale) {
     if (!snapshotFr.empty) {
       const doc = snapshotFr.docs[0];
       if (doc) {
-        return { id: doc.id, ...doc.data() };
+        const data = doc.data();
+        // ⭐ Convert timestamps and return plain object
+        return { 
+          id: doc.id, 
+          ...convertTimestamps(data) 
+        };
       }
     }
     

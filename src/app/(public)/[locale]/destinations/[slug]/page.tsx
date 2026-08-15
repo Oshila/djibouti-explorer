@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { use } from 'react';
 import { Locale } from '@/types';
 import Link from 'next/link';
+import { db } from '@/lib/firebase/client';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { 
   ArrowLeftIcon, 
   MapPinIcon, 
@@ -25,7 +27,7 @@ interface Props {
   }>;
 }
 
-// Destination data
+// Destination data WITHOUT hardcoded tour counts
 const destinationsData = [
   { 
     name: { en: 'Lake Assal', fr: 'Lac Assal' },
@@ -43,7 +45,6 @@ const destinationsData = [
     },
     location: { en: 'Danakil Depression, Central Djibouti', fr: 'Dépression de Danakil, Centre de Djibouti' },
     bestTime: { en: 'November to February', fr: 'Novembre à Février' },
-    tours: 8,
     coordinates: '11.65°N, 42.42°E',
     highlights: {
       en: ['Lowest point in Africa', 'Saltiest lake on Earth', 'Stunning white salt flats', 'Volcanic landscape'],
@@ -66,7 +67,6 @@ const destinationsData = [
     },
     location: { en: 'Ethiopia-Djibouti Border', fr: 'Frontière Éthiopie-Djibouti' },
     bestTime: { en: 'November to March', fr: 'Novembre à Mars' },
-    tours: 6,
     coordinates: '11.52°N, 41.79°E',
     highlights: {
       en: ['Limestone chimneys', 'Salt lake', 'Bird watching', 'Sunset views'],
@@ -89,7 +89,6 @@ const destinationsData = [
     },
     location: { en: 'Gulf of Tadjoura, Northern Djibouti', fr: 'Golfe de Tadjoura, Nord de Djibouti' },
     bestTime: { en: 'October to February', fr: 'Octobre à Février' },
-    tours: 5,
     coordinates: '11.78°N, 42.88°E',
     highlights: {
       en: ['Whale shark encounters', 'Coral reefs', 'Snorkeling', 'Marine life'],
@@ -112,7 +111,6 @@ const destinationsData = [
     },
     location: { en: 'Day Mountains, Southern Djibouti', fr: 'Montagnes du Day, Sud de Djibouti' },
     bestTime: { en: 'November to April', fr: 'Novembre à Avril' },
-    tours: 4,
     coordinates: '11.53°N, 42.55°E',
     highlights: {
       en: ['Endemic bird species', 'Juniper forest', 'Mountain views', 'Hiking trails'],
@@ -135,7 +133,6 @@ const destinationsData = [
     },
     location: { en: 'Gulf of Tadjoura, Djibouti', fr: 'Golfe de Tadjoura, Djibouti' },
     bestTime: { en: 'November to April', fr: 'Novembre à Avril' },
-    tours: 4,
     coordinates: '11.72°N, 43.20°E',
     highlights: {
       en: ['White sand beaches', 'Turquoise water', 'Snorkeling', 'Island escape'],
@@ -158,7 +155,6 @@ const destinationsData = [
     },
     location: { en: 'Gulf of Tadjoura, Djibouti', fr: 'Golfe de Tadjoura, Djibouti' },
     bestTime: { en: 'November to April', fr: 'Novembre à Avril' },
-    tours: 3,
     coordinates: '11.70°N, 43.18°E',
     highlights: {
       en: ['Calm waters', 'Snorkeling', 'Tropical fish', 'Peaceful atmosphere'],
@@ -181,7 +177,6 @@ const destinationsData = [
     },
     location: { en: 'Gulf of Tadjoura, Djibouti', fr: 'Golfe de Tadjoura, Djibouti' },
     bestTime: { en: 'November to March', fr: 'Novembre à Mars' },
-    tours: 2,
     coordinates: '11.80°N, 43.30°E',
     highlights: {
       en: ['Seabird colonies', 'Remote beaches', 'Photography', 'Snorkeling'],
@@ -204,7 +199,6 @@ const destinationsData = [
     },
     location: { en: 'Goda Mountains, Djibouti', fr: 'Monts Goda, Djibouti' },
     bestTime: { en: 'November to April', fr: 'Novembre à Avril' },
-    tours: 1,
     coordinates: '11.53°N, 42.55°E',
     highlights: {
       en: ['Waterfall hike', 'Green monkey sightings', 'Mountain views', 'Traditional toukoul huts'],
@@ -227,7 +221,6 @@ const destinationsData = [
     },
     location: { en: 'Coastal Djibouti', fr: 'Côte de Djibouti' },
     bestTime: { en: 'November to April', fr: 'Novembre à Avril' },
-    tours: 2,
     coordinates: '11.70°N, 43.10°E',
     highlights: {
       en: ['Pristine beaches', 'Crystal-clear water', 'Peaceful atmosphere', 'Swimming'],
@@ -250,7 +243,6 @@ const destinationsData = [
     },
     location: { en: 'Djibouti City, Djibouti', fr: 'Djibouti Ville, Djibouti' },
     bestTime: { en: 'All year round', fr: 'Toute l\'année' },
-    tours: 2,
     coordinates: '11.59°N, 43.15°E',
     highlights: {
       en: ['French colonial architecture', 'Central Market', 'National Museum', 'Waterfront'],
@@ -263,45 +255,85 @@ function getDestinationBySlug(slug: string, locale: Locale) {
   return destinationsData.find(d => d.slug[locale] === slug) || null;
 }
 
-function getToursForDestination(destinationName: string, locale: Locale) {
-  if (!destinationName) return [];
-  
-  // Dittilou specific tour
-  if (destinationName.toLowerCase() === 'dittilou') {
-    return [{
-      id: 'dittilou-mountain-day-trip',
-      title: {
-        en: 'Dittilou Mountain Day Trip',
-        fr: 'Excursion d\'une Journée à Dittilou'
-      },
-      price: 160,
-      duration: 1
-    }];
-  }
-  
-  // Other tours
-  const allTours = [
-    { id: '1', title: { en: 'Lake Assal Discovery', fr: 'Découverte du Lac Assal' }, price: 150, duration: 1 },
-    { id: '2', title: { en: 'Whale Shark Adventure', fr: 'Aventure Requin-Baleine' }, price: 250, duration: 1 },
-    { id: '3', title: { en: 'Lac Abbé & Ardoukoba', fr: 'Lac Abbé & Ardoukoba' }, price: 350, duration: 2 },
-  ];
-  
-  const searchTerm = destinationName.toLowerCase();
-  
-  return allTours.filter(tour => {
-    const titleEn = tour.title.en?.toLowerCase() || '';
-    const titleFr = tour.title.fr?.toLowerCase() || '';
-    return titleEn.includes(searchTerm) || titleFr.includes(searchTerm);
-  });
-}
-
 export default function DestinationDetailPage({ params }: Props) {
   const { locale, slug } = use(params);
   const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
   const [imageError, setImageError] = useState(false);
+  const [tourCount, setTourCount] = useState<number>(0);
+  const [relatedTours, setRelatedTours] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const destination = getDestinationBySlug(slug, validLocale);
-  
+
+  // Fetch tours from Firestore
+  useEffect(() => {
+    async function fetchToursForDestination() {
+      if (!destination) return;
+      
+      try {
+        setLoading(true);
+        
+        // Fetch all tours
+        const toursSnapshot = await getDocs(collection(db, 'tours'));
+        const allTours = toursSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        // Count tours that include this destination
+        const destinationName = destination.name.en.toLowerCase();
+        const destinationNameFr = destination.name.fr.toLowerCase();
+        const destinationSlug = destination.slug.en.toLowerCase();
+        const destinationSlugFr = destination.slug.fr.toLowerCase();
+
+        const matchedTours = allTours.filter((tour: any) => {
+          // Check if tour has destinations array
+          if (tour.destinations && Array.isArray(tour.destinations)) {
+            return tour.destinations.some((d: string) => {
+              const dLower = d.toLowerCase();
+              return dLower === destinationSlug ||
+                     dLower === destinationSlugFr ||
+                     dLower === destinationName ||
+                     dLower === destinationNameFr ||
+                     dLower.includes(destinationSlug) ||
+                     dLower.includes(destinationName);
+            });
+          }
+          // Check if tour has a single destination field
+          if (tour.destination) {
+            const dLower = tour.destination.toLowerCase();
+            return dLower === destinationSlug ||
+                   dLower === destinationSlugFr ||
+                   dLower === destinationName ||
+                   dLower === destinationNameFr;
+          }
+          return false;
+        });
+
+        setTourCount(matchedTours.length);
+        
+        // Format related tours for display
+        const formattedTours = matchedTours.slice(0, 5).map((tour: any) => ({
+          id: tour.id,
+          title: tour.title || { en: 'Tour', fr: 'Circuit' },
+          price: tour.price || 0,
+          duration: tour.duration || 1,
+          slug: tour.slug?.en || tour.id,
+        }));
+        
+        setRelatedTours(formattedTours);
+      } catch (error) {
+        console.error('Error fetching tours for destination:', error);
+        setTourCount(0);
+        setRelatedTours([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchToursForDestination();
+  }, [destination]);
+
   if (!destination) {
     return (
       <div className="container-custom section-padding text-center">
@@ -313,8 +345,6 @@ export default function DestinationDetailPage({ params }: Props) {
       </div>
     );
   }
-
-  const relatedTours = getToursForDestination(destination.name[validLocale], validLocale);
 
   return (
     <div className="bg-cream min-h-screen">
@@ -394,35 +424,32 @@ export default function DestinationDetailPage({ params }: Props) {
               <h2 className="text-xl font-heading text-teal mb-4">
                 {validLocale === 'en' ? 'Tours Available' : 'Circuits Disponibles'}
               </h2>
-              {relatedTours.length > 0 ? (
+              {loading ? (
+                <div className="text-center py-4">
+                  <div className="w-8 h-8 border-4 border-teal border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-sm text-nearblack/60 mt-2">Loading tours...</p>
+                </div>
+              ) : relatedTours.length > 0 ? (
                 <div className="space-y-3">
-                  {relatedTours.map((tour) => {
-                    const slugMap: Record<string, string> = {
-                      '1': 'lake-assal-discovery',
-                      '2': 'whale-shark-adventure',
-                      '3': 'lac-abbe-ardoukoba',
-                      'dittilou-mountain-day-trip': 'dittilou-mountain-day-trip'
-                    };
-                    const tourSlug = slugMap[tour.id] || 'lake-assal-discovery';
-                    
-                    return (
-                      <Link
-                        key={tour.id}
-                        href={`/${validLocale}/tours/${tourSlug}`}
-                        className="flex items-center justify-between p-4 bg-cream rounded-xl hover:bg-teal/5 transition-colors"
-                      >
-                        <div>
-                          <div className="font-medium text-teal">{tour.title[validLocale]}</div>
-                          <div className="text-sm text-nearblack/50">{tour.duration} {validLocale === 'en' ? 'day' : 'jour'}</div>
-                        </div>
-                        <div className="text-lg font-bold text-teal">${tour.price}</div>
-                      </Link>
-                    );
-                  })}
+                  {relatedTours.map((tour) => (
+                    <Link
+                      key={tour.id}
+                      href={`/${validLocale}/tours/${tour.slug}`}
+                      className="flex items-center justify-between p-4 bg-cream rounded-xl hover:bg-teal/5 transition-colors"
+                    >
+                      <div>
+                        <div className="font-medium text-teal">{tour.title[validLocale] || tour.title.en}</div>
+                        <div className="text-sm text-nearblack/50">{tour.duration} {validLocale === 'en' ? 'day' : 'jour'}</div>
+                      </div>
+                      <div className="text-lg font-bold text-teal">${tour.price}</div>
+                    </Link>
+                  ))}
                 </div>
               ) : (
                 <p className="text-nearblack/60">
-                  {validLocale === 'en' ? 'No tours available for this destination yet.' : 'Aucun circuit disponible pour cette destination pour le moment.'}
+                  {validLocale === 'en' 
+                    ? 'No tours available for this destination yet.' 
+                    : 'Aucun circuit disponible pour cette destination pour le moment.'}
                 </p>
               )}
             </div>
@@ -459,7 +486,9 @@ export default function DestinationDetailPage({ params }: Props) {
                     <div className="text-xs text-nearblack/50">
                       {validLocale === 'en' ? 'Tours Available' : 'Circuits Disponibles'}
                     </div>
-                    <div className="text-sm text-nearblack">{destination.tours} tours</div>
+                    <div className="text-sm text-nearblack font-medium">
+                      {loading ? '...' : `${tourCount} ${validLocale === 'en' ? 'tours' : 'circuits'}`}
+                    </div>
                   </div>
                 </div>
               </div>

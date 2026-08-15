@@ -1,148 +1,176 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { db } from '@/lib/firebase/client';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { Locale } from '@/types';
-import { MapPinIcon } from '@heroicons/react/24/outline';
+
+interface Destination {
+  id: string;
+  name: { en: string; fr: string };
+  slug: { en: string; fr: string };
+  description: { en: string; fr: string };
+  image: string;
+  featured: boolean;
+  tourCount: number; // ⭐ Dynamic count
+}
 
 interface Props {
   locale: Locale;
 }
 
-// In production, this would come from Firebase
-const destinations = [
-  { 
-    name: { en: 'Lake Assal', fr: 'Lac Assal' },
-    slug: { en: 'lake-assal', fr: 'lac-assal' },
-    image: '/images/destinations/lake-assal.jpg',
-    description: { en: 'Lowest point in Africa', fr: 'Point le plus bas d\'Afrique' },
-    tours: 8,
-  },
-  { 
-    name: { en: 'Lac Abbé', fr: 'Lac Abbé' },
-    slug: { en: 'lac-abbe', fr: 'lac-abbe' },
-    image: '/images/destinations/lac-abbe.jpg',
-    description: { en: 'Limestone chimneys', fr: 'Cheminées de calcaire' },
-    tours: 6,
-  },
-  { 
-    name: { en: 'Tadjoura Gulf', fr: 'Golfe de Tadjoura' },
-    slug: { en: 'tadjoura-gulf', fr: 'golfe-tadjoura' },
-    image: '/images/destinations/tadjoura-gulf.jpg',
-    description: { en: 'Whale shark paradise', fr: 'Paradis des requins-baleines' },
-    tours: 5,
-  },
-  { 
-    name: { en: 'Day Forest', fr: 'Forêt du Day' },
-    slug: { en: 'day-forest', fr: 'foret-day' },
-    image: '/images/destinations/day-forest.jpg',
-    description: { en: 'Unique biodiversity', fr: 'Biodiversité unique' },
-    tours: 4,
-  },
-
-  { 
-    name: { en: 'Ardoukoba', fr: 'Ardoukoba' },
-    slug: { en: 'ardoukoba', fr: 'ardoukoba' },
-    image: '/images/destinations/ardoukoba.jpg',
-    description: { en: 'Active volcano', fr: 'Volcan actif' },
-    tours: 3,
-  },
-  // NEW DESTINATIONS
-  { 
-    name: { en: 'Moucha Islands', fr: 'Îles Moucha' },
-    slug: { en: 'moucha-islands', fr: 'iles-moucha' },
-    image: '/images/destinations/moucha-islands.jpg',
-    description: { en: 'White sand beaches', fr: 'Plages de sable blanc' },
-    tours: 4,
-  },
-  { 
-    name: { en: 'Maskali Islands', fr: 'Îles Maskali' },
-    slug: { en: 'maskali-islands', fr: 'iles-maskali' },
-    image: '/images/destinations/maskali-islands.jpg',
-    description: { en: 'Calm waters', fr: 'Eaux calmes' },
-    tours: 3,
-  },
-  { 
-    name: { en: 'Seven Brothers Islands', fr: 'Îles des Sept Frères' },
-    slug: { en: 'seven-brothers-islands', fr: 'iles-sept-freres' },
-    image: '/images/destinations/seven-brothers.jpg',
-    description: { en: 'Seabird colonies', fr: 'Colonies d\'oiseaux marins' },
-    tours: 2,
-  },
-  { 
-    name: { en: 'Dittilou', fr: 'Dittilou' },
-    slug: { en: 'dittilou', fr: 'dittilou' },
-    image: '/images/destinations/dittilou.jpg',
-    description: { en: 'Sea turtles & coral', fr: 'Tortues & corail' },
-    tours: 2,
-  },
-  { 
-    name: { en: 'Allols', fr: 'Allols' },
-    slug: { en: 'allols', fr: 'allols' },
-    image: '/images/destinations/allols.jpg',
-    description: { en: 'Hidden coastal gem', fr: 'Joyau côtier caché' },
-    tours: 2,
-  },
-];
-
 export function DestinationsGrid({ locale }: Props) {
+  const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchDestinationsWithCounts() {
+      try {
+        // Fetch all destinations
+        const destSnapshot = await getDocs(collection(db, 'destinations'));
+        const destData = destSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        // Fetch all tours
+        const toursSnapshot = await getDocs(collection(db, 'tours'));
+        const tours = toursSnapshot.docs.map(doc => doc.data());
+
+        // Count tours per destination
+        const destinationsWithCounts = destData.map((dest: any) => {
+          // Count tours that include this destination
+          const tourCount = tours.filter((tour: any) => {
+            // Check if tour has destinations array
+            if (tour.destinations && Array.isArray(tour.destinations)) {
+              return tour.destinations.includes(dest.id) || 
+                     tour.destinations.includes(dest.name?.en) ||
+                     tour.destinations.includes(dest.slug?.en);
+            }
+            // Check if tour has a destination field
+            if (tour.destination) {
+              return tour.destination === dest.id || 
+                     tour.destination === dest.name?.en;
+            }
+            return false;
+          }).length;
+
+          return {
+            ...dest,
+            tourCount: tourCount,
+          };
+        });
+
+        setDestinations(destinationsWithCounts);
+      } catch (error) {
+        console.error('Error fetching destinations:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchDestinationsWithCounts();
+  }, []);
+
+  const content = {
+    en: {
+      title: 'Explore Our Destinations',
+      subtitle: 'Discover the extraordinary landscapes of Djibouti',
+      viewAll: 'View All Destinations',
+      tours: 'tours',
+    },
+    fr: {
+      title: 'Explorez Nos Destinations',
+      subtitle: 'Découvrez les paysages extraordinaires de Djibouti',
+      viewAll: 'Voir Toutes les Destinations',
+      tours: 'circuits',
+    },
+  };
+
+  const t = content[locale];
+
+  if (loading) {
+    return (
+      <section className="section-padding bg-white">
+        <div className="container-custom">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-teal border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="mt-4 text-nearblack/60">Loading destinations...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="section-padding bg-white">
       <div className="container-custom">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <span className="text-terracotta font-medium text-sm uppercase tracking-wider">
-            {locale === 'en' ? 'Destinations' : 'Destinations'}
-          </span>
-          <h2 className="text-3xl md:text-4xl font-heading text-teal mt-2 mb-4">
-            {locale === 'en' ? 'Explore Djibouti' : 'Explorez Djibouti'}
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading text-nearblack mb-4">
+            {t.title}
           </h2>
-          <p className="text-nearblack/70 text-lg">
-            {locale === 'en' 
-              ? 'From salt lakes to volcanic landscapes, discover the wonders of Djibouti.' 
-              : 'Des lacs salés aux paysages volcaniques, découvrez les merveilles de Djibouti.'}
+          <p className="text-lg text-nearblack/70 max-w-2xl mx-auto">
+            {t.subtitle}
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {/* Destinations Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {destinations.map((dest) => (
             <Link
-              key={dest.slug.en}
+              key={dest.id}
               href={`/${locale}/destinations/${dest.slug[locale]}`}
-              className="group bg-cream hover:bg-white rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-cream hover:border-teal/20"
+              className="group relative overflow-hidden rounded-2xl bg-cream hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
             >
-              {/* Image */}
-              <div className="relative h-32 bg-gradient-to-br from-teal/10 to-terracotta/10 overflow-hidden">
+              <div className="aspect-[4/3] relative overflow-hidden">
                 {dest.image ? (
-                  <img
+                  <Image
                     src={dest.image}
                     alt={dest.name[locale]}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-4xl">
-                    🏝️
+                  <div className="w-full h-full bg-teal/10 flex items-center justify-center">
+                    <span className="text-4xl">🏝️</span>
                   </div>
                 )}
+                {/* Overlay gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-nearblack/60 via-nearblack/20 to-transparent" />
               </div>
-              
-              {/* Content */}
-              <div className="p-4 text-center">
-                <h3 className="font-heading text-sm text-nearblack group-hover:text-teal transition-colors">
+
+              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                <h3 className="text-xl font-heading mb-1">
                   {dest.name[locale]}
                 </h3>
-                <p className="text-xs text-nearblack/50 mt-1">
+                <p className="text-sm text-white/80 mb-2 line-clamp-2">
                   {dest.description[locale]}
                 </p>
-                <div className="mt-2 flex items-center justify-center gap-1 text-xs text-nearblack/40">
-                  <MapPinIcon className="w-3 h-3" />
-                  <span>{dest.tours} {locale === 'en' ? 'tours' : 'circuits'}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                    {dest.tourCount || 0} {t.tours}
+                  </span>
+                  <span className="text-sm text-white/60">
+                    {locale === 'en' ? 'Explore →' : 'Explorer →'}
+                  </span>
                 </div>
               </div>
             </Link>
           ))}
+        </div>
+
+        {/* View All Link */}
+        <div className="text-center mt-12">
+          <Link
+            href={`/${locale}/destinations`}
+            className="inline-flex items-center gap-2 text-teal hover:text-terracotta font-medium transition-colors"
+          >
+            {t.viewAll}
+            <span className="text-xl">→</span>
+          </Link>
         </div>
       </div>
     </section>
