@@ -17,10 +17,31 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Djibouti Explorer | Discover Authentic Djibouti Tours',
+    default: 'Djibouti Explorer - Authentic Tours in Djibouti',
     template: '%s | Djibouti Explorer',
   },
-  description: 'Book authentic tours in Djibouti. Explore Lake Assal, whale sharks, and the best of Djibouti with local experts.',
+  description: 'Djibouti Explorer offers authentic tours in Djibouti. Explore Lake Assal, swim with whale sharks, and discover the best of Djibouti with local experts.',
+  
+  // Add these for better SEO
+  keywords: 'Djibouti Explorer, Djibouti tours, Lake Assal, whale sharks Djibouti, authentic Djibouti travel',
+  
+  // Add this for social sharing
+  openGraph: {
+    title: 'Djibouti Explorer - Authentic Tours in Djibouti',
+    description: 'Discover the extraordinary side of Djibouti with local experts.',
+    url: 'https://djiboutiexplorer.com',
+    siteName: 'Djibouti Explorer',
+    locale: 'en_US',
+    type: 'website',
+  },
+  
+  // Add this for Twitter cards
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Djibouti Explorer - Authentic Tours in Djibouti',
+    description: 'Discover the extraordinary side of Djibouti with local experts.',
+    images: ['/images/logo.jpg'],
+  },
 
    icons: {
     icon: [
