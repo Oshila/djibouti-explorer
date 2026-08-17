@@ -1,14 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Locale } from '@/types';
+import { usePathname } from 'next/navigation';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 
-interface Props {
-  locale: Locale;
-}
-
-export function CookieConsent({ locale }: Props) {
+export default function CookieConsent() {  // ⭐ No props
   const [isVisible, setIsVisible] = useState(false);
+  const pathname = usePathname();
+
+  // Detect locale from URL
+  const getLocale = () => {
+    const segments = pathname?.split('/').filter(Boolean) || [];
+    const firstSegment = segments[0];
+    if (firstSegment === 'en' || firstSegment === 'fr') {
+      return firstSegment;
+    }
+    return 'en';
+  };
+
+  const locale = getLocale();
 
   useEffect(() => {
     const consent = localStorage.getItem('cookieConsent');
@@ -22,49 +32,29 @@ export function CookieConsent({ locale }: Props) {
     setIsVisible(false);
   };
 
-  const declineCookies = () => {
-    localStorage.setItem('cookieConsent', 'declined');
-    setIsVisible(false);
+  const content = {
+    en: {
+      message: 'We use cookies to improve your experience.',
+      accept: 'Accept',
+    },
+    fr: {
+      message: 'Nous utilisons des cookies pour améliorer votre expérience.',
+      accept: 'Accepter',
+    },
   };
+
+  const t = content[locale as 'en' | 'fr'] || content.en;
 
   if (!isVisible) return null;
 
-  const content = {
-    en: {
-      message: 'We use cookies to enhance your experience. By continuing, you agree to our use of cookies.',
-      accept: 'Accept',
-      decline: 'Decline',
-      learnMore: 'Learn More',
-    },
-    fr: {
-      message: 'Nous utilisons des cookies pour améliorer votre expérience. En continuant, vous acceptez notre utilisation des cookies.',
-      accept: 'Accepter',
-      decline: 'Refuser',
-      learnMore: 'En Savoir Plus',
-    },
-  };
-
-  const t = content[locale];
-
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-nearblack text-cream p-4 shadow-lg">
-      <div className="container-custom flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p className="text-sm text-cream/80 text-center sm:text-left">
-          {t.message}
-          <a href={`/${locale}/privacy`} className="text-ochre hover:underline ml-1">
-            {t.learnMore}
-          </a>
-        </p>
-        <div className="flex gap-3">
-          <button
-            onClick={declineCookies}
-            className="px-4 py-2 rounded-lg border border-cream/30 text-cream/70 hover:bg-cream/10 transition text-sm"
-          >
-            {t.decline}
-          </button>
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-teal/95 backdrop-blur-md border-t border-white/10 p-4">
+      <div className="container-custom">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-cream/80">{t.message}</p>
           <button
             onClick={acceptCookies}
-            className="px-4 py-2 rounded-lg bg-ochre text-nearblack hover:bg-ochre/90 transition text-sm font-medium"
+            className="bg-ochre text-nearblack px-6 py-2 rounded-lg text-sm font-medium hover:bg-ochre/90 transition-all whitespace-nowrap"
           >
             {t.accept}
           </button>

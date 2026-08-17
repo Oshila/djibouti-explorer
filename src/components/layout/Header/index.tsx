@@ -3,18 +3,26 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Bars3Icon, XMarkIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
-import { Locale } from '@/types';
 
-interface Props {
-  locale: Locale;
-}
-
-export function Header({ locale }: Props) {
+export default function Header() {  // ⭐ DEFAULT export, no props
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Detect locale from URL
+  const getLocale = () => {
+    const segments = pathname?.split('/').filter(Boolean) || [];
+    const firstSegment = segments[0];
+    if (firstSegment === 'en' || firstSegment === 'fr') {
+      return firstSegment;
+    }
+    return 'en';
+  };
+
+  const locale = getLocale();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,27 +51,16 @@ export function Header({ locale }: Props) {
 
   const navItems = navigation[locale as 'en' | 'fr'] || navigation.en;
 
-  // Build the path for the other language
-  const getOtherLanguagePath = () => {
-    if (!pathname) return `/${locale === 'en' ? 'fr' : 'en'}`;
+  // Simple toggle - just switch between en and fr
+  const toggleLanguage = () => {
+    const newLocale = locale === 'en' ? 'fr' : 'en';
     
-    const segments = pathname.split('/');
-    const currentLocale = segments[1];
+    const segments = pathname?.split('/').filter(Boolean) || [];
+    const pathWithoutLocale = segments.slice(1).join('/');
+    const newPath = `/${newLocale}${pathWithoutLocale ? '/' + pathWithoutLocale : ''}`;
     
-    if (currentLocale === 'en' || currentLocale === 'fr') {
-      const newLocale = currentLocale === 'en' ? 'fr' : 'en';
-      const restOfPath = segments.slice(2).join('/');
-      return `/${newLocale}${restOfPath ? '/' + restOfPath : ''}`;
-    }
-    
-    return `/${locale === 'en' ? 'fr' : 'en'}`;
+    router.push(newPath);
   };
-
-  const otherPath = getOtherLanguagePath();
-  
-  // DYNAMIC LABEL - Shows the opposite language
-  const switchLabel = locale === 'en' ? 'Français' : 'English';
-  const switchShort = locale === 'en' ? 'FR' : 'EN';
 
   return (
     <header
@@ -75,16 +72,7 @@ export function Header({ locale }: Props) {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link href={`/${locale}`} className="flex items-center gap-3 flex-shrink-0">
-            <div 
-              className="p-1 rounded-lg"
-              style={{ 
-                backgroundColor: 'transparent',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
+            <div className="p-1 rounded-lg" style={{ backgroundColor: 'transparent', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Image
                 src="/images/logo-removebg-preview.png"
                 alt="Djibouti Explorer"
@@ -125,15 +113,20 @@ export function Header({ locale }: Props) {
               WhatsApp
             </a>
             
-            {/* Language Switcher - Desktop */}
-            <Link
-              href={otherPath}
-              className="text-cream/80 hover:text-white transition-colors text-sm flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/10"
+            {/* Language Toggle Button */}
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all duration-200 border border-white/20 hover:border-white/40"
+              aria-label="Switch language"
             >
-              <GlobeAltIcon className="w-4 h-4" />
-              <span className="font-medium">{switchLabel}</span>
-              <span className="text-xs text-cream/50">({switchShort})</span>
-            </Link>
+              <GlobeAltIcon className="w-5 h-5 text-white" />
+              <span className="text-sm font-medium text-white">
+                {locale === 'en' ? '🇬🇧 EN' : '🇫🇷 FR'}
+              </span>
+              <span className="text-xs text-white/50">
+                {locale === 'en' ? '→ FR' : '→ EN'}
+              </span>
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -143,11 +136,9 @@ export function Header({ locale }: Props) {
             aria-label="Toggle menu"
           >
             {isMenuOpen ? (
-              <XMarkIcon className={`w-6 h-6 transition-colors duration-300 text-white`} />
+              <XMarkIcon className="w-6 h-6 text-white" />
             ) : (
-              <Bars3Icon className={`w-6 h-6 transition-colors duration-300 ${
-                isScrolled ? 'text-white' : 'text-black'
-              }`} />
+              <Bars3Icon className={`w-6 h-6 transition-colors duration-300 ${isScrolled ? 'text-white' : 'text-black'}`} />
             )}
           </button>
         </div>
@@ -182,18 +173,22 @@ export function Header({ locale }: Props) {
                 WhatsApp
               </a>
               
-              {/* Language Switcher - Mobile */}
-              <Link
-                href={otherPath}
-                className="block text-cream/80 hover:text-white transition-colors text-center py-3 border border-white/20 rounded-lg hover:bg-white/10"
-                onClick={() => setIsMenuOpen(false)}
+              {/* Mobile Language Toggle */}
+              <button
+                onClick={() => {
+                  toggleLanguage();
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-cream/80 hover:text-white transition-colors text-center py-3 border border-white/20 rounded-lg hover:bg-white/10"
               >
                 <div className="flex items-center justify-center gap-2">
                   <GlobeAltIcon className="w-5 h-5" />
-                  <span>{switchLabel}</span>
-                  <span className="text-xs text-cream/50">({switchShort})</span>
+                  <span>{locale === 'en' ? 'Switch to Français' : 'Switch to English'}</span>
+                  <span className="text-xs text-cream/50">
+                    {locale === 'en' ? '🇫🇷' : '🇬🇧'}
+                  </span>
                 </div>
-              </Link>
+              </button>
             </div>
           </div>
         </div>

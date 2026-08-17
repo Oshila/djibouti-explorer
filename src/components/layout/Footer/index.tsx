@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Locale } from '@/types';
+import { usePathname } from 'next/navigation';
 import { 
   EnvelopeIcon,
   PhoneIcon,
@@ -14,11 +14,20 @@ import {
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 
-interface Props {
-  locale: Locale;
-}
+export default function Footer() {
+  const pathname = usePathname();
+  
+  const getLocale = () => {
+    const segments = pathname?.split('/').filter(Boolean) || [];
+    const firstSegment = segments[0];
+    if (firstSegment === 'en' || firstSegment === 'fr') {
+      return firstSegment;
+    }
+    return 'en';
+  };
 
-export function Footer({ locale }: Props) {
+  const locale = getLocale() as 'en' | 'fr';
+
   const content = {
     en: {
       company: 'Djibouti Explorer is your trusted local tour operator, offering authentic experiences across Djibouti.',
@@ -54,15 +63,31 @@ export function Footer({ locale }: Props) {
     },
   };
 
-  const t = content[locale];
+  const t = content[locale] || content.en;
   const whatsappNumber = '+25377862639';
   const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\+/g, '')}`;
 
+  const getHref = (key: string) => {
+    const slugMap: Record<string, string> = {
+      tours: 'tours',
+      destinations: 'destinations',
+      blog: 'blog',
+      about: 'about',
+      contact: 'contact',
+    };
+    return `/${locale}/${slugMap[key] || key}`;
+  };
+
   return (
     <footer className="relative bg-nearblack text-cream/80 overflow-hidden">
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-teal/5 via-transparent to-terracotta/5" />
-      <div className="absolute top-0 left-1/4 w-64 h-64 bg-ochre/5 rounded-full blur-3xl" />
+      {/* ⭐ BLACK TOP - Solid nearblack background */}
+      <div className="absolute inset-0 bg-nearblack" />
+      
+      {/* ⭐ GRADIENT OVERLAY - Only on bottom portion */}
+      <div className="absolute inset-0 bg-gradient-to-b from-nearblack via-teal/5 to-terracotta/10" />
+      
+      {/* Decorative blurs - bottom only */}
+      <div className="absolute bottom-0 left-1/4 w-64 h-64 bg-ochre/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-terracotta/5 rounded-full blur-3xl" />
       
       {/* Top Decorative Line */}
@@ -84,9 +109,9 @@ export function Footer({ locale }: Props) {
                 }}
               >
                 <Image
-                  src="/images/logo-footer.jpg"
+                  src="/images/logo-footer3.jpg"
                   alt="Djibouti Explorer"
-                  width={85}
+                  width={95}
                   height={45}
                   className="object-contain"
                 />
@@ -125,7 +150,7 @@ export function Footer({ locale }: Props) {
               {Object.entries(t.links).map(([key, label]) => (
                 <li key={key}>
                   <Link
-                    href={`/${locale}/${key === 'tours' ? 'tours' : key === 'destinations' ? 'destinations' : key === 'blog' ? 'blog' : key === 'about' ? 'about' : 'contact'}`}
+                    href={getHref(key)}
                     className="text-cream/50 hover:text-ochre transition-all duration-300 text-sm hover:translate-x-1 inline-block"
                   >
                     {label}
@@ -175,7 +200,6 @@ export function Footer({ locale }: Props) {
               <span className="absolute -bottom-1 left-0 w-6 h-0.5 bg-ochre rounded-full" />
             </h4>
             
-            {/* TripAdvisor Badge - With Border */}
             <a
               href="https://www.tripadvisor.com/Attraction_Review-g293787-d34320815-Reviews-Djibouti_Explorer-Djibouti.html"
               target="_blank"
@@ -183,7 +207,6 @@ export function Footer({ locale }: Props) {
               className="block bg-white/5 backdrop-blur-sm rounded-xl p-4 border-2 border-ochre/20 hover:border-ochre/50 transition-all duration-300 group"
             >
               <div className="flex flex-col items-center text-center">
-                {/* TripAdvisor Image with Border */}
                 <div className="relative p-1 rounded-lg bg-gradient-to-r from-ochre/20 to-ochre/5 border border-ochre/10 mb-2">
                   <Image
                     src="/images/trip-advisor.jpg"
@@ -194,26 +217,22 @@ export function Footer({ locale }: Props) {
                   />
                 </div>
                 
-                {/* Stars */}
                 <div className="flex items-center gap-0.5 text-ochre mb-1">
                   {[...Array(5)].map((_, i) => (
                     <StarSolidIcon key={i} className="w-4 h-4" />
                   ))}
                 </div>
                 
-                {/* Excellence Badge */}
                 <div className="text-[10px] text-cream/40 mb-2">
                   {t.tripadvisor}
                 </div>
                 
-                {/* View Reviews Button */}
                 <div className="bg-ochre/10 text-ochre text-xs font-medium px-4 py-1.5 rounded-full group-hover:bg-ochre/20 transition-colors border border-ochre/10">
                   {t.viewReviews} →
                 </div>
               </div>
             </a>
 
-            {/* WhatsApp CTA - Compact */}
             <div className="mt-4">
               <p className="text-cream/40 text-xs mb-2.5 text-center">
                 {locale === 'en' 
@@ -241,10 +260,10 @@ export function Footer({ locale }: Props) {
             © {new Date().getFullYear()} Djibouti Explorer. {t.rights}
           </p>
           <div className="flex gap-5 text-xs">
-            <Link href="/privacy" className="text-cream/30 hover:text-ochre transition-colors">
+            <Link href={`/${locale}/privacy`} className="text-cream/30 hover:text-ochre transition-colors">
               {locale === 'en' ? 'Privacy Policy' : 'Politique de Confidentialité'}
             </Link>
-            <Link href="/terms" className="text-cream/30 hover:text-ochre transition-colors">
+            <Link href={`/${locale}/terms`} className="text-cream/30 hover:text-ochre transition-colors">
               {locale === 'en' ? 'Terms of Service' : 'Conditions d\'Utilisation'}
             </Link>
           </div>

@@ -34,7 +34,7 @@ export function WhatsAppCTA({ locale }: Props) {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
-    }, 1200000);
+    }, 12000);
 
     return () => clearTimeout(timer);
   }, []);
