@@ -17,7 +17,7 @@ import { WhatsAppCTA } from '@/components/shared/WhatsAppCTA';
 import { OpenStreetMap } from '@/components/home/OpenStreetMap';
 interface Props {
   params: Promise<{
-    locale: Locale;
+    locale: string;  // ⭐ Use string instead of Locale
   }>;
 }
 
@@ -57,8 +57,8 @@ interface Tour {
   updatedAt: string;
 }
 
-export default function HomePage({ params }: Props) {
-  const { locale } = use(params);
+export default async function HomePage({ params }: Props) {
+  const { locale } = await params;
   const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
   
   const [tours, setTours] = useState<Tour[]>([]);
