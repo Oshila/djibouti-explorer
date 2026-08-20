@@ -36,6 +36,7 @@ export default function Header() {  // ⭐ DEFAULT export, no props
     en: [
       { name: 'Tours', href: `/${locale}/tours` },
       { name: 'Destinations', href: `/${locale}/destinations` },
+      { name: 'Visa', href: `/${locale}/visa` },
       { name: 'Blog', href: `/${locale}/blog` },
       { name: 'About', href: `/${locale}/about` },
       { name: 'Contact', href: `/${locale}/contact` },
@@ -43,6 +44,7 @@ export default function Header() {  // ⭐ DEFAULT export, no props
     fr: [
       { name: 'Circuits', href: `/${locale}/tours` },
       { name: 'Destinations', href: `/${locale}/destinations` },
+      { name: 'Visa', href: `/${locale}/visa` },
       { name: 'Blog', href: `/${locale}/blog` },
       { name: 'À Propos', href: `/${locale}/about` },
       { name: 'Contact', href: `/${locale}/contact` },

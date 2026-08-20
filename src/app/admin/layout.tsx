@@ -100,6 +100,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Tours', href: '/admin/tours', icon: MapPinIcon },
     { name: 'Destinations', href: '/admin/destinations', icon: MapPinIcon },
     { name: 'Bookings', href: '/admin/bookings', icon: CalendarIcon },
+    { name: 'Visa Applications', href: '/admin/visa', icon: CalendarIcon },
     { name: 'Reviews', href: '/admin/reviews', icon: StarIcon },
     { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
   ];
