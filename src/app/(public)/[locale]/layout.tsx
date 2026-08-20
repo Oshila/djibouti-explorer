@@ -1,13 +1,13 @@
-import type { Metadata } from 'next';
 import { Locale } from '@/types';
+import type { Metadata } from 'next';
 
 interface Props {
   children: React.ReactNode;
-  params: { locale: Locale };
+  params: Promise<{ locale: Locale }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale } = params;
+  const { locale } = await params;
   const baseUrl = 'https://djiboutiexplorer.com';
   
   return {
@@ -22,8 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function LocaleLayout({ children, params }: Props) {
-  const { locale } = params;
+export default async function LocaleLayout({ children, params }: Props) {
+  const { locale } = await params;
   
   return (
     <>
