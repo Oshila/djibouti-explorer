@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { use } from 'react';
+import { useState, useEffect, use } from 'react';  // ⭐ Import 'use' directly
 import { Locale } from '@/types';
 import { db } from '@/lib/firebase/client';
-import { collection, getDocs, limit } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { HeroSection } from '@/components/home/HeroSection';
 import { TripAdvisorBadge } from '@/components/home/TripAdvisorBadge';
 import { FeaturedToursCarousel } from '@/components/home/FeaturedToursCarousel';
@@ -12,12 +11,12 @@ import { DestinationsGrid } from '@/components/home/DestinationsGrid';
 import { WhyChooseUs } from '@/components/home/WhyChooseUs';
 import { SeasonalRecommendations } from '@/components/home/SeasonalRecommendations';
 import { CustomerReviews } from '@/components/home/CustomerReviews';
-import { GoogleMap } from '@/components/home/GoogleMap';
 import { WhatsAppCTA } from '@/components/shared/WhatsAppCTA';
 import { OpenStreetMap } from '@/components/home/OpenStreetMap';
+
 interface Props {
   params: Promise<{
-    locale: string;  // ⭐ Use string instead of Locale
+    locale: string;
   }>;
 }
 
@@ -57,8 +56,9 @@ interface Tour {
   updatedAt: string;
 }
 
-export default async function HomePage({ params }: Props) {
-  const { locale } = await params;
+export default function HomePage({ params }: Props) {
+  // ⭐ Use the imported 'use' function
+  const { locale } = use(params);
   const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
   
   const [tours, setTours] = useState<Tour[]>([]);
@@ -67,9 +67,6 @@ export default async function HomePage({ params }: Props) {
   useEffect(() => {
     async function fetchTours() {
       try {
-        console.log('🔄 Client: Fetching tours from Firebase...');
-        
-        // Get all tours (no filters)
         const querySnapshot = await getDocs(collection(db, 'tours'));
         
         const tourData: Tour[] = querySnapshot.docs.map(doc => {
@@ -111,17 +108,15 @@ export default async function HomePage({ params }: Props) {
           };
         });
         
-        // Sort by createdAt (newest first)
         const sortedTours = tourData.sort((a, b) => {
           const dateA = new Date(a.createdAt);
           const dateB = new Date(b.createdAt);
           return dateB.getTime() - dateA.getTime();
         });
         
-        console.log('✅ Client: Fetched tours:', sortedTours.length);
         setTours(sortedTours);
       } catch (err) {
-        console.error('❌ Client: Error fetching tours:', err);
+        console.error('Error fetching tours:', err);
       } finally {
         setLoading(false);
       }
@@ -141,28 +136,26 @@ export default async function HomePage({ params }: Props) {
     );
   }
 
-return (
-  <>
-    <HeroSection locale={validLocale} />
-    
-    {/* TripAdvisor Badge - Perfectly positioned */}
-    <div className="container-custom px-4 -mt-8 md:-mt-12 relative z-10">
-      <TripAdvisorBadge locale={validLocale} />
-    </div>
-    
-    <FeaturedToursCarousel locale={validLocale} tours={tours} />
-    <OpenStreetMap locale={validLocale} />
-    <DestinationsGrid locale={validLocale} />
-    <WhyChooseUs locale={validLocale} />
-    <SeasonalRecommendations locale={validLocale} />
+  return (
+    <>
+      <HeroSection locale={validLocale} />
+      
+      <div className="container-custom px-4 -mt-8 md:-mt-12 relative z-10">
+        <TripAdvisorBadge locale={validLocale} />
+      </div>
+      
+      <FeaturedToursCarousel locale={validLocale} tours={tours} />
+      <OpenStreetMap locale={validLocale} />
+      <DestinationsGrid locale={validLocale} />
+      <WhyChooseUs locale={validLocale} />
+      <SeasonalRecommendations locale={validLocale} />
 
-        {/* TripAdvisor Badge - Perfectly positioned */}
-    <div className="container-custom px-4 -mt-8 md:-mt-12 relative z-10">
-      <TripAdvisorBadge locale={validLocale} />
-    </div>
+      <div className="container-custom px-4 -mt-8 md:-mt-12 relative z-10">
+        <TripAdvisorBadge locale={validLocale} />
+      </div>
 
-    <CustomerReviews locale={validLocale} />
-    <WhatsAppCTA locale={validLocale} />
-  </>
-);
+      <CustomerReviews locale={validLocale} />
+      <WhatsAppCTA locale={validLocale} />
+    </>
+  );
 }
