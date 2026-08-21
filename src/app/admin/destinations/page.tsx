@@ -19,7 +19,9 @@ import {
   TrashIcon,
   EyeIcon,
   EyeSlashIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  CheckCircleIcon,
+  XCircleIcon
 } from '@heroicons/react/24/outline';
 
 interface Destination {
@@ -190,29 +192,45 @@ export default function AdminDestinations() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {/* Publish/Unpublish */}
                       <button
                         onClick={() => togglePublish(dest.id, dest.published !== false)}
-                        className="p-2 hover:bg-cream rounded-lg transition-colors"
-                        title={dest.published !== false ? 'Unpublish' : 'Publish'}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                          dest.published !== false 
+                            ? 'bg-olive/10 text-olive hover:bg-olive/20' 
+                            : 'bg-ochre/10 text-ochre hover:bg-ochre/20'
+                        }`}
                       >
                         {dest.published !== false ? (
-                          <EyeIcon className="w-4 h-4 text-olive" />
+                          <>
+                            <EyeIcon className="w-3.5 h-3.5" />
+                            Published
+                          </>
                         ) : (
-                          <EyeSlashIcon className="w-4 h-4 text-ochre" />
+                          <>
+                            <EyeSlashIcon className="w-3.5 h-3.5" />
+                            Draft
+                          </>
                         )}
                       </button>
+
+                      {/* Edit */}
                       <Link
                         href={`/admin/destinations/${dest.id}`}
-                        className="p-2 hover:bg-cream rounded-lg transition-colors"
+                        className="px-3 py-1.5 bg-teal/10 text-teal hover:bg-teal/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
                       >
-                        <PencilIcon className="w-4 h-4 text-nearblack/60" />
+                        <PencilIcon className="w-3.5 h-3.5" />
+                        Edit
                       </Link>
+
+                      {/* Delete */}
                       <button
                         onClick={() => deleteDestination(dest.id, dest.name.en)}
-                        className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                        className="px-3 py-1.5 bg-terracotta/10 text-terracotta hover:bg-terracotta/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
                       >
-                        <TrashIcon className="w-4 h-4 text-terracotta" />
+                        <TrashIcon className="w-3.5 h-3.5" />
+                        Delete
                       </button>
                     </div>
                   </td>

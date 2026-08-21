@@ -5,7 +5,8 @@ import {
   CheckCircleIcon,
   EnvelopeIcon,
   ChatBubbleLeftRightIcon,
-  PrinterIcon
+  PrinterIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
 
 interface Props {
@@ -15,16 +16,22 @@ interface Props {
 }
 
 export function BookingConfirmation({ tour, bookingData, locale }: Props) {
+  const isPaid = bookingData?.paymentStatus === 'paid' || bookingData?.paymentStatus === 'succeeded';
+  const isPending = bookingData?.paymentStatus === 'pending' || !bookingData?.paymentStatus;
+
   const content = {
     en: {
       title: 'Booking Confirmed! 🎉',
-      subtitle: 'Your adventure is booked. We\'ll send you a confirmation email shortly.',
+      subtitle: 'Your adventure is booked. A confirmation email has been sent.',
       reference: 'Booking Reference',
       tour: 'Tour',
       date: 'Date',
       travellers: 'Travellers',
-      total: 'Total',
-      deposit: 'Deposit Paid',
+      total: 'Total Paid',
+      paymentStatus: 'Payment Status',
+      paid: '✅ Payment Confirmed',
+      pending: '⏳ Payment Pending',
+      paymentNote: 'Please complete your payment to confirm your booking.',
       next: 'What happens next?',
       steps: [
         'You will receive a confirmation email with your booking details.',
@@ -37,13 +44,16 @@ export function BookingConfirmation({ tour, bookingData, locale }: Props) {
     },
     fr: {
       title: 'Réservation Confirmée ! 🎉',
-      subtitle: 'Votre aventure est réservée. Nous vous enverrons un email de confirmation sous peu.',
+      subtitle: 'Votre aventure est réservée. Un email de confirmation a été envoyé.',
       reference: 'Référence de Réservation',
       tour: 'Circuit',
       date: 'Date',
       travellers: 'Voyageurs',
-      total: 'Total',
-      deposit: 'Acompte Payé',
+      total: 'Total Payé',
+      paymentStatus: 'Statut du Paiement',
+      paid: '✅ Paiement Confirmé',
+      pending: '⏳ Paiement en Attente',
+      paymentNote: 'Veuillez compléter votre paiement pour confirmer votre réservation.',
       next: 'Et maintenant ?',
       steps: [
         'Vous recevrez un email de confirmation avec les détails de votre réservation.',
@@ -64,6 +74,10 @@ export function BookingConfirmation({ tour, bookingData, locale }: Props) {
       : `Bonjour ! J'ai une réservation (${bookingData.bookingReference}) et j'ai une question.`
   );
 
+  const totalTravellers = (bookingData.travellers?.adults || 0) + 
+                          (bookingData.travellers?.children || 0) + 
+                          (bookingData.travellers?.infants || 0);
+
   return (
     <div className="bg-white rounded-2xl p-8 shadow-sm">
       <div className="text-center mb-8">
@@ -74,37 +88,56 @@ export function BookingConfirmation({ tour, bookingData, locale }: Props) {
         <p className="text-nearblack/60 mt-2">{t.subtitle}</p>
       </div>
 
+      {/* Payment Status */}
+      <div className={`rounded-xl p-4 mb-6 flex items-center gap-3 ${
+        isPaid ? 'bg-olive/10 border border-olive/20' : 'bg-ochre/10 border border-ochre/20'
+      }`}>
+        {isPaid ? (
+          <CheckCircleIcon className="w-6 h-6 text-olive flex-shrink-0" />
+        ) : (
+          <ClockIcon className="w-6 h-6 text-ochre flex-shrink-0" />
+        )}
+        <div>
+          <div className="text-sm font-medium">
+            {isPaid ? t.paid : t.pending}
+          </div>
+          {!isPaid && (
+            <p className="text-xs text-nearblack/60">{t.paymentNote}</p>
+          )}
+        </div>
+      </div>
+
       {/* Booking Details */}
       <div className="bg-cream rounded-xl p-6 mb-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <div className="text-xs text-nearblack/50">{t.reference}</div>
-            <div className="font-mono font-bold text-teal">{bookingData.bookingReference}</div>
+            <div className="font-mono font-bold text-teal">{bookingData.bookingReference || 'N/A'}</div>
           </div>
           <div>
             <div className="text-xs text-nearblack/50">{t.tour}</div>
-            <div className="font-medium">{tour.title[locale]}</div>
+            <div className="font-medium">{tour?.title?.[locale] || bookingData.tourName || 'Tour'}</div>
           </div>
           <div>
             <div className="text-xs text-nearblack/50">{t.date}</div>
-            <div className="font-medium">{new Date(bookingData.date).toLocaleDateString(locale === 'en' ? 'en-US' : 'fr-FR')}</div>
+            <div className="font-medium">
+              {bookingData.date 
+                ? new Date(bookingData.date).toLocaleDateString(locale === 'en' ? 'en-US' : 'fr-FR')
+                : 'Flexible'}
+            </div>
           </div>
           <div>
             <div className="text-xs text-nearblack/50">{t.travellers}</div>
-            <div className="font-medium">{bookingData.travellers.adults + bookingData.travellers.children + bookingData.travellers.infants}</div>
+            <div className="font-medium">{totalTravellers}</div>
           </div>
         </div>
       </div>
 
       {/* Payment Summary */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-cream rounded-xl p-4 text-center">
-          <div className="text-xs text-nearblack/50">{t.total}</div>
-          <div className="text-2xl font-bold text-teal">${tour.price}</div>
-        </div>
-        <div className="bg-cream rounded-xl p-4 text-center">
-          <div className="text-xs text-nearblack/50">{t.deposit}</div>
-          <div className="text-2xl font-bold text-olive">${tour.depositAmount}</div>
+      <div className="bg-cream rounded-xl p-4 text-center mb-6">
+        <div className="text-xs text-nearblack/50">{t.total}</div>
+        <div className="text-2xl font-bold text-teal">
+          ${bookingData.totalAmount || tour?.price || 0}
         </div>
       </div>
 

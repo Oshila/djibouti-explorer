@@ -9,6 +9,7 @@ import {
   getDocs, 
   doc, 
   updateDoc,
+  deleteDoc,
   orderBy 
 } from 'firebase/firestore';
 import toast from 'react-hot-toast';
@@ -17,7 +18,9 @@ import {
   XCircleIcon,
   ClockIcon,
   MagnifyingGlassIcon,
-  EyeIcon
+  EyeIcon,
+  TrashIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 
 interface Booking {
@@ -98,14 +101,25 @@ export default function AdminBookings() {
     }
   };
 
+  const deleteBooking = async (id: string, reference: string) => {
+    if (!confirm(`Delete booking ${reference}? This cannot be undone.`)) return;
+    try {
+      await deleteDoc(doc(db, 'bookings', id));
+      toast.success('Booking deleted');
+      fetchBookings();
+    } catch (error) {
+      toast.error('Failed to delete booking');
+    }
+  };
+
   const getStatusColor = (status: string) => {
     const colors = {
-      confirmed: 'bg-olive text-white',
-      pending: 'bg-ochre text-nearblack',
-      cancelled: 'bg-terracotta text-white',
-      completed: 'bg-teal text-white',
+      confirmed: 'bg-olive/10 text-olive',
+      pending: 'bg-ochre/10 text-ochre',
+      cancelled: 'bg-terracotta/10 text-terracotta',
+      completed: 'bg-teal/10 text-teal',
     };
-    return colors[status as keyof typeof colors] || 'bg-gray-300';
+    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-500';
   };
 
   if (loading) {
@@ -191,7 +205,9 @@ export default function AdminBookings() {
             <tbody className="divide-y divide-cream">
               {filteredBookings.map((booking) => (
                 <tr key={booking.id} className="hover:bg-cream/30 transition-colors">
-                  <td className="px-6 py-4 text-sm font-mono text-teal">{booking.bookingReference || booking.id.slice(0, 8)}</td>
+                  <td className="px-6 py-4 text-sm font-mono text-teal">
+                    {booking.bookingReference || booking.id.slice(0, 8)}
+                  </td>
                   <td className="px-6 py-4">
                     <div>
                       <div className="text-sm font-medium text-nearblack">{booking.customerName || 'N/A'}</div>
@@ -212,41 +228,72 @@ export default function AdminBookings() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {/* View Details */}
                       <Link
                         href={`/admin/bookings/${booking.id}`}
-                        className="p-2 hover:bg-cream rounded-lg transition-colors"
+                        className="px-3 py-1.5 bg-teal/10 text-teal hover:bg-teal/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
                         title="View Details"
                       >
-                        <EyeIcon className="w-4 h-4 text-nearblack/60" />
+                        <EyeIcon className="w-3.5 h-3.5" />
+                        View
                       </Link>
+
+                      {/* Pending Actions */}
                       {booking.bookingStatus === 'pending' && (
                         <>
                           <button
                             onClick={() => updateBookingStatus(booking.id, 'confirmed')}
-                            className="p-2 hover:bg-olive/10 rounded-lg transition-colors"
-                            title="Confirm"
+                            className="px-3 py-1.5 bg-olive/10 text-olive hover:bg-olive/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
+                            title="Confirm Booking"
                           >
-                            <CheckCircleIcon className="w-4 h-4 text-olive" />
+                            <CheckCircleIcon className="w-3.5 h-3.5" />
+                            Confirm
                           </button>
                           <button
                             onClick={() => updateBookingStatus(booking.id, 'cancelled')}
-                            className="p-2 hover:bg-terracotta/10 rounded-lg transition-colors"
-                            title="Cancel"
+                            className="px-3 py-1.5 bg-terracotta/10 text-terracotta hover:bg-terracotta/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
+                            title="Cancel Booking"
                           >
-                            <XCircleIcon className="w-4 h-4 text-terracotta" />
+                            <XCircleIcon className="w-3.5 h-3.5" />
+                            Cancel
                           </button>
                         </>
                       )}
+
+                      {/* Confirmed Actions */}
                       {booking.bookingStatus === 'confirmed' && (
                         <button
                           onClick={() => updateBookingStatus(booking.id, 'completed')}
-                          className="p-2 hover:bg-teal/10 rounded-lg transition-colors"
+                          className="px-3 py-1.5 bg-teal/10 text-teal hover:bg-teal/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
                           title="Mark Complete"
                         >
-                          <ClockIcon className="w-4 h-4 text-teal" />
+                          <ClockIcon className="w-3.5 h-3.5" />
+                          Complete
                         </button>
                       )}
+
+                      {/* Completed Actions */}
+                      {booking.bookingStatus === 'completed' && (
+                        <button
+                          onClick={() => updateBookingStatus(booking.id, 'pending')}
+                          className="px-3 py-1.5 bg-ochre/10 text-ochre hover:bg-ochre/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
+                          title="Reopen Booking"
+                        >
+                          <ArrowPathIcon className="w-3.5 h-3.5" />
+                          Reopen
+                        </button>
+                      )}
+
+                      {/* Delete Button - Always visible */}
+                      <button
+                        onClick={() => deleteBooking(booking.id, booking.bookingReference || booking.id.slice(0, 8))}
+                        className="px-3 py-1.5 bg-terracotta/10 text-terracotta hover:bg-terracotta/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
+                        title="Delete Booking"
+                      >
+                        <TrashIcon className="w-3.5 h-3.5" />
+                        Delete
+                      </button>
                     </div>
                   </td>
                 </tr>

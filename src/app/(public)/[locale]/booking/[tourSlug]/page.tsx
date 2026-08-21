@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { use } from 'react';
+import { useRouter } from 'next/navigation';
 import { Locale } from '@/types';
 import { db } from '@/lib/firebase/client';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { 
   CalendarIcon, 
@@ -63,7 +64,7 @@ async function getTourBySlug(slug: string) {
 }
 
 export default function BookingPage({ params }: Props) {
-  // UNWRAP params using React.use()
+  const router = useRouter();
   const { locale, tourSlug } = use(params);
   const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
   
@@ -82,8 +83,6 @@ export default function BookingPage({ params }: Props) {
     phone: '',
     specialRequests: '',
   });
-  const [completed, setCompleted] = useState(false);
-  const [reference, setReference] = useState('');
 
   useEffect(() => {
     async function fetchTour() {
@@ -98,7 +97,6 @@ export default function BookingPage({ params }: Props) {
     fetchTour();
   }, [tourSlug]);
 
-  // If still loading or no tour, show loading/error state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cream to-white">
@@ -126,12 +124,12 @@ export default function BookingPage({ params }: Props) {
   }
 
   const totalGuests = formData.adults + formData.children + formData.infants;
-  const estimatedPrice = tour?.price * totalGuests;
+  const totalAmount = tour?.price * totalGuests;
 
   const steps = [
     { id: 1, label: validLocale === 'en' ? 'Date & Guests' : 'Date & Voyageurs', icon: CalendarIcon },
     { id: 2, label: validLocale === 'en' ? 'Your Details' : 'Vos Coordonnées', icon: UserIcon },
-    { id: 3, label: validLocale === 'en' ? 'Review' : 'Vérification', icon: CreditCardIcon },
+    { id: 3, label: validLocale === 'en' ? 'Review & Pay' : 'Vérification & Paiement', icon: CreditCardIcon },
   ];
 
   const content = {
@@ -147,22 +145,18 @@ export default function BookingPage({ params }: Props) {
       email: 'Email Address',
       phone: 'Phone Number',
       specialRequests: 'Special Requests (Optional)',
-      submit: 'Submit Inquiry',
+      submit: 'Proceed to Payment',
       back: 'Back',
       next: 'Continue',
-      total: 'Estimated Total',
+      total: 'Total',
       currency: 'USD',
       perPerson: 'per person',
-      success: 'Inquiry Sent!',
-      reference: 'Reference Number',
-      wait: 'Our team will review your request and contact you within 24 hours.',
-      whatsapp: 'Chat on WhatsApp',
-      home: 'Return Home',
       step: 'Step',
       of: 'of',
       review: 'Review Your Booking',
       guests: 'guests',
       flex: 'Flexible',
+      paymentNote: 'You will be redirected to Stripe to complete your payment securely.',
     },
     fr: {
       title: 'Réservez Votre Aventure',
@@ -176,22 +170,18 @@ export default function BookingPage({ params }: Props) {
       email: 'Adresse Email',
       phone: 'Numéro de Téléphone',
       specialRequests: 'Demandes Spéciales (Optionnel)',
-      submit: 'Envoyer la Demande',
+      submit: 'Procéder au Paiement',
       back: 'Retour',
       next: 'Continuer',
-      total: 'Total Estimé',
+      total: 'Total',
       currency: 'USD',
       perPerson: 'par personne',
-      success: 'Demande Envoyée !',
-      reference: 'Numéro de Référence',
-      wait: 'Notre équipe examinera votre demande et vous contactera dans les 24 heures.',
-      whatsapp: 'Discuter sur WhatsApp',
-      home: 'Retour à l\'Accueil',
       step: 'Étape',
       of: 'sur',
       review: 'Vérifiez Votre Réservation',
       guests: 'voyageurs',
       flex: 'Flexible',
+      paymentNote: 'Vous serez redirigé vers Stripe pour compléter votre paiement en toute sécurité.',
     },
   };
 
@@ -200,72 +190,58 @@ export default function BookingPage({ params }: Props) {
  const handleSubmit = async () => {
   setSubmitting(true);
   try {
-    const response = await fetch('/api/send-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email,
-        phone: formData.phone,
-        tourName: tour.title[validLocale],
-        date: formData.date || 'Flexible',
-        guests: totalGuests,
+    console.log('📝 Creating booking with data:', {
+      tourId: tour.id,
+      tourName: tour.title[validLocale],
+      totalAmount: totalAmount,
+    });
+
+    const bookingRef = await addDoc(collection(db, 'bookings'), {
+      tourId: tour.id,
+      tourName: tour.title[validLocale],
+      tourSlug: tourSlug,
+      date: formData.date || null,
+      travellers: {
         adults: formData.adults,
         children: formData.children,
         infants: formData.infants,
-        price: tour.price,
-        currency: tour.currency || 'USD',
-        specialRequests: formData.specialRequests,
-      }),
+      },
+      customer: {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+      },
+      specialRequests: formData.specialRequests || '',
+      totalAmount: totalAmount,
+      currency: 'USD',
+      paymentStatus: 'pending',
+      bookingStatus: 'pending',
+      createdAt: serverTimestamp(),
     });
 
-    const data = await response.json();
-    if (data.success) {
-      setReference(data.reference);
-      setCompleted(true);
-    } else {
-      toast.error('Something went wrong. Please try again.');
-    }
+    console.log('✅ Booking created with ID:', bookingRef.id);
+
+    const reference = `BK-${Date.now().toString().slice(-8)}`;
+    await updateDoc(doc(db, 'bookings', bookingRef.id), {
+      bookingReference: reference,
+    });
+
+    console.log('📋 Booking reference:', reference);
+    console.log('🔗 Redirecting to checkout with ID:', bookingRef.id);
+
+    const checkoutUrl = `/${validLocale}/checkout?type=tour&id=${bookingRef.id}&name=${encodeURIComponent(tour.title[validLocale])}&price=${totalAmount}`;
+    
+    toast.success('Booking created! Redirecting to payment...');
+    router.push(checkoutUrl);
+
   } catch (error) {
-    console.error('Error:', error);
+    console.error('❌ Error creating booking:', error);
     toast.error('Something went wrong. Please try again.');
   } finally {
     setSubmitting(false);
   }
 };
-  if (completed) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal/5 via-cream to-terracotta/5 p-4">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 max-w-md w-full text-center border border-cream animate-fade-in">
-          <div className="w-20 h-20 bg-olive/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircleIcon className="w-10 h-10 text-olive" />
-          </div>
-          <h1 className="text-2xl font-heading text-teal mb-2">{t.success}</h1>
-          <p className="text-nearblack/60 text-sm">{t.wait}</p>
-          <div className="bg-gradient-to-r from-teal/5 to-cream rounded-2xl p-4 mt-6 border border-teal/10">
-            <p className="text-xs text-nearblack/50 uppercase tracking-wider">{t.reference}</p>
-            <p className="text-xl font-mono font-bold text-teal">{reference}</p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 mt-8">
-            <a
-              href="https://wa.me/25377862639"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white px-6 py-3 rounded-xl font-medium transition hover:shadow-lg hover:scale-[1.02] active:scale-95"
-            >
-              💬 {t.whatsapp}
-            </a>
-            <a
-              href={`/${validLocale}`}
-              className="flex-1 bg-teal hover:bg-teal/90 text-white px-6 py-3 rounded-xl font-medium transition hover:shadow-lg active:scale-95"
-            >
-              🏠 {t.home}
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream via-white to-cream/50 py-8 md:py-12">
@@ -351,9 +327,7 @@ export default function BookingPage({ params }: Props) {
             {/* Step 1: Date & Guests */}
             {currentStep === 1 && (
               <div className="animate-fade-in">
-                <h2 className="text-xl font-heading text-teal mb-6">
-                  {steps[0]?.label ?? (validLocale === 'en' ? 'Date & Guests' : 'Date & Voyageurs')}
-                </h2>
+                <h2 className="text-xl font-heading text-teal mb-6">{steps[0]?.label}</h2>
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-nearblack/70 mb-2">
@@ -431,7 +405,7 @@ export default function BookingPage({ params }: Props) {
                       </div>
                     </div>
                     <div className="text-right text-sm text-nearblack/50 mt-3">
-                      {totalGuests} {t.guests} • <span className="font-medium text-teal">${estimatedPrice}</span> {t.total}
+                      {totalGuests} {t.guests} • <span className="font-medium text-teal">${totalAmount}</span> {t.total}
                     </div>
                   </div>
                 </div>
@@ -449,7 +423,7 @@ export default function BookingPage({ params }: Props) {
             {/* Step 2: Your Details */}
             {currentStep === 2 && (
               <div className="animate-fade-in">
-                <h2 className="text-xl font-heading text-teal mb-6">{steps[1]?.label ?? (validLocale === 'en' ? 'Your Details' : 'Vos Coordonnées')}</h2>
+                <h2 className="text-xl font-heading text-teal mb-6">{steps[1]?.label}</h2>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -536,7 +510,7 @@ export default function BookingPage({ params }: Props) {
               </div>
             )}
 
-            {/* Step 3: Review */}
+            {/* Step 3: Review & Pay */}
             {currentStep === 3 && (
               <div className="animate-fade-in">
                 <h2 className="text-xl font-heading text-teal mb-6">{t.review}</h2>
@@ -553,7 +527,7 @@ export default function BookingPage({ params }: Props) {
                       </div>
                       <div className="col-span-2">
                         <div className="text-nearblack/50">{t.total}</div>
-                        <div className="font-bold text-2xl text-teal">${estimatedPrice}</div>
+                        <div className="font-bold text-2xl text-teal">${totalAmount}</div>
                       </div>
                     </div>
                   </div>
@@ -566,6 +540,21 @@ export default function BookingPage({ params }: Props) {
                         <span className="text-nearblack/50">{t.specialRequests}:</span> {formData.specialRequests}
                       </p>
                     )}
+                  </div>
+
+                  {/* Payment Note */}
+                  <div className="bg-teal/5 rounded-xl p-4 border border-teal/20">
+                    <div className="flex items-center gap-3">
+                      <CreditCardIcon className="w-5 h-5 text-teal" />
+                      <div>
+                        <p className="text-sm font-medium text-teal">{t.paymentNote}</p>
+                        <p className="text-xs text-nearblack/50 mt-1">
+                          {validLocale === 'en' 
+                            ? `You will pay the full amount of $${totalAmount} now.` 
+                            : `Vous paierez le montant total de $${totalAmount} maintenant.`}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 mt-8">
@@ -586,11 +575,11 @@ export default function BookingPage({ params }: Props) {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        Sending...
+                        Processing...
                       </>
                     ) : (
                       <>
-                        {t.submit} <ArrowRightIcon className="w-5 h-5" />
+                        {t.submit} <CreditCardIcon className="w-5 h-5" />
                       </>
                     )}
                   </button>
@@ -612,7 +601,7 @@ export default function BookingPage({ params }: Props) {
           </span>
           <span className="flex items-center gap-1.5">
             <CheckCircleIcon className="w-4 h-4 text-olive" />
-            {validLocale === 'en' ? '24/7 Support' : 'Support 24/7'}
+            {validLocale === 'en' ? 'Stripe Secure Payment' : 'Paiement Sécurisé Stripe'}
           </span>
         </div>
       </div>

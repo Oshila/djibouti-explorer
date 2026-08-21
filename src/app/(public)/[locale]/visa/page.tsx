@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { db } from '@/lib/firebase/client';
@@ -31,6 +31,7 @@ interface FormData {
 
 export default function VisaPage() {
   const params = useParams();
+  const router = useRouter();
   const locale = params?.locale as string || 'en';
   const isEn = locale === 'en';
 
@@ -62,7 +63,7 @@ export default function VisaPage() {
       },
       review: {
         title: 'Review Your Information',
-        confirm: 'Confirm & Request',
+        confirm: 'Confirm & Pay',
         edit: 'Edit',
       },
       complete: {
@@ -73,10 +74,10 @@ export default function VisaPage() {
       features: [
         { icon: GlobeAltIcon, title: 'Global Access', desc: 'Available for all nationalities eligible for a visa to Djibouti.' },
         { icon: ClockIcon, title: 'Fast Track', desc: 'Standard processing within 24-48 hours of payment.' },
-        { icon: ShieldCheckIcon, title: 'Secure', desc: 'Encrypted data processing and secure payment via WhatsApp.' },
+        { icon: ShieldCheckIcon, title: 'Secure', desc: 'Encrypted data processing and secure Stripe payment.' },
       ],
       payment: 'Payment: $23 USD (Visa Fee)',
-      whatsappMessage: 'Hi! I would like to request a visa invitation letter. My details:',
+      paymentNote: 'You will be redirected to Stripe to complete your payment securely.',
     },
     fr: {
       title: "Lettre d'Invitation de Visa",
@@ -94,7 +95,7 @@ export default function VisaPage() {
       },
       review: {
         title: "Vérifiez vos informations",
-        confirm: 'Confirmer & Demander',
+        confirm: 'Confirmer & Payer',
         edit: 'Modifier',
       },
       complete: {
@@ -105,15 +106,14 @@ export default function VisaPage() {
       features: [
         { icon: GlobeAltIcon, title: 'Accès Mondial', desc: 'Disponible pour toutes les nationalités éligibles au visa pour Djibouti.' },
         { icon: ClockIcon, title: 'Rapide', desc: 'Traitement standard sous 24-48 heures après paiement.' },
-        { icon: ShieldCheckIcon, title: 'Sécurisé', desc: 'Traitement des données crypté et paiement sécurisé via WhatsApp.' },
+        { icon: ShieldCheckIcon, title: 'Sécurisé', desc: 'Traitement des données crypté et paiement sécurisé Stripe.' },
       ],
       payment: 'Paiement : 23 $ USD (Frais de visa)',
-      whatsappMessage: 'Bonjour! Je souhaite demander une lettre d\'invitation de visa. Mes coordonnées:',
+      paymentNote: 'Vous serez redirigé vers Stripe pour compléter votre paiement en toute sécurité.',
     }
   };
 
   const t = content[locale as keyof typeof content] || content.en;
-  const whatsappNumber = '+25377862639';
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -127,45 +127,47 @@ export default function VisaPage() {
            formData.nationality && formData.arrivalDate && formData.departureDate;
   };
 
+  // ⭐ Updated: Save to Firestore and redirect to Stripe checkout
   const handleSubmit = async () => {
-    setIsSubmitting(true);
+  setIsSubmitting(true);
+  
+  try {
+    // Save visa request to Firestore
+    const docRef = await addDoc(collection(db, 'visaRequests'), {
+      ...formData,
+      status: 'pending',
+      paymentStatus: 'pending',
+      createdAt: serverTimestamp(),
+    });
     
-    try {
-      // Save to Firestore
-      await addDoc(collection(db, 'visaRequests'), {
-        ...formData,
-        status: 'pending',
-        whatsappNumber: whatsappNumber,
-        createdAt: serverTimestamp(),
-      });
-      
-      // Format the message for WhatsApp
-      const message = `${t.whatsappMessage}
-      
-Full Name: ${formData.fullName}
-Email: ${formData.email}
-Passport Number: ${formData.passportNumber}
-Nationality: ${formData.nationality}
-Arrival Date: ${formData.arrivalDate}
-Departure Date: ${formData.departureDate}
----
-Visa Invitation Letter Request
-Total: $23 USD`;
-
-      const encodedMessage = encodeURIComponent(message);
-      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-      
-      window.open(whatsappUrl, '_blank');
-      setStep(3);
-      toast.success('Request submitted successfully!');
-    } catch (error) {
-      console.error('Error saving visa request:', error);
-      toast.error('Failed to submit request. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
+    // ⭐ Also create a payment record
+    await addDoc(collection(db, 'payments'), {
+      visaRequestId: docRef.id,
+      amount: 23,
+      currency: 'usd',
+      status: 'pending',
+      type: 'visa',
+      metadata: {
+        visaRequestId: docRef.id,
+        customerName: formData.fullName,
+        customerEmail: formData.email,
+      },
+      customerEmail: formData.email,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    
+    // Redirect to Stripe checkout
+    const checkoutUrl = `/${locale}/checkout?type=visa&id=${docRef.id}&name=${encodeURIComponent('Visa Invitation Letter')}&price=23`;
+    router.push(checkoutUrl);
+    
+  } catch (error) {
+    console.error('Error saving visa request:', error);
+    toast.error('Failed to submit request. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   const renderStep1 = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -279,8 +281,8 @@ Total: $23 USD`;
             <p className="text-sm font-medium text-olive">{t.payment}</p>
             <p className="text-xs text-nearblack/50">
               {isEn 
-                ? 'You will be redirected to WhatsApp to complete payment.' 
-                : 'Vous serez redirigé vers WhatsApp pour effectuer le paiement.'}
+                ? 'You will be redirected to Stripe to complete payment.' 
+                : 'Vous serez redirigé vers Stripe pour effectuer le paiement.'}
             </p>
           </div>
         </div>
@@ -335,8 +337,8 @@ Total: $23 USD`;
           <p className="text-sm font-medium text-olive">{t.payment}</p>
           <p className="text-xs text-nearblack/50">
             {isEn 
-              ? 'Payment will be processed via WhatsApp.' 
-              : 'Le paiement sera traité via WhatsApp.'}
+              ? 'Payment will be processed via Stripe.' 
+              : 'Le paiement sera traité via Stripe.'}
           </p>
         </div>
       </div>

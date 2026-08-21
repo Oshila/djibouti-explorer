@@ -14,14 +14,15 @@ export function getCustomerEmailHTML(data: {
   phone: string;
   specialRequests: string;
 }) {
-  // Calculate breakdown
-  const adultPrice = data.price;
-  const childPrice = data.price * 0.7; // 30% discount for children
-  const infantPrice = 0; // Infants free
-  const totalAdults = data.adults || data.guests || 0;
+  const totalAdults = data.adults || 0;
   const totalChildren = data.children || 0;
   const totalInfants = data.infants || 0;
   const totalGuests = totalAdults + totalChildren + totalInfants;
+  
+  // Calculate price breakdown
+  const adultPrice = data.price;
+  const childPrice = Math.round(data.price * 0.7);
+  const infantPrice = 0;
   
   const totalPrice = (totalAdults * adultPrice) + (totalChildren * childPrice) + (totalInfants * infantPrice);
 
@@ -31,7 +32,7 @@ export function getCustomerEmailHTML(data: {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tour Inquiry Confirmation</title>
+  <title>Booking Confirmation</title>
   <style>
     body { 
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -57,7 +58,7 @@ export function getCustomerEmailHTML(data: {
       margin-bottom: 24px;
     }
     .logo { 
-      font-size: 24px; 
+      font-size: 28px; 
       font-weight: bold; 
       color: #1E3D47; 
       font-family: Georgia, serif;
@@ -224,9 +225,6 @@ export function getCustomerEmailHTML(data: {
       color: #1E3D47;
       text-decoration: none;
     }
-    .contact-info a:hover {
-      text-decoration: underline;
-    }
     .divider {
       height: 2px;
       background: linear-gradient(to right, transparent, #1E3D47, transparent);
@@ -241,77 +239,82 @@ export function getCustomerEmailHTML(data: {
       <!-- Header -->
       <div class="header">
         <div class="logo">Djibouti <span>Explorer</span></div>
-        <div class="badge">INQUIRY</div>
+        <div class="badge">CONFIRMED ✅</div>
       </div>
 
       <!-- Reference -->
       <div class="ref-box">
-        <strong>REF:</strong> <span class="ref-code">${data.reference}</span>
+        <strong>Booking Reference:</strong> <span class="ref-code">${data.reference || 'N/A'}</span>
       </div>
 
       <!-- Greeting -->
       <div class="greeting">
-        Dear <strong>${data.name}</strong>,
+        Dear <strong>${data.name || 'Guest'}</strong>,
       </div>
       <p style="color: #555; line-height: 1.6; font-size: 15px; margin-bottom: 24px;">
-        Thank you for your interest in exploring Djibouti with us! We are excited to help you plan an unforgettable experience.
+        Thank you for your booking! Your adventure with Djibouti Explorer is confirmed. 
+        We are excited to help you explore the extraordinary side of Djibouti.
       </p>
 
-      <!-- Inquiry Details -->
-      <div class="section-title">🗺️ Your Inquiry Details</div>
-      <div class="detail-row">
-        <span class="detail-label">Reference:</span>
-        <span class="detail-value">${data.reference}</span>
-      </div>
+      <!-- Booking Details -->
+      <div class="section-title">📋 Booking Details</div>
       <div class="detail-row">
         <span class="detail-label">Tour:</span>
-        <span class="detail-value">${data.tourName}</span>
+        <span class="detail-value"><strong>${data.tourName || 'N/A'}</strong></span>
       </div>
       <div class="detail-row">
         <span class="detail-label">Date:</span>
         <span class="detail-value">${data.date || 'Flexible'}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">Guests:</span>
-        <span class="detail-value">${totalGuests}</span>
+        <span class="detail-label">Total Guests:</span>
+        <span class="detail-value"><strong>${totalGuests}</strong></span>
       </div>
+      ${totalAdults > 0 ? `<div class="detail-row"><span class="detail-label">Adults:</span><span class="detail-value">${totalAdults}</span></div>` : ''}
+      ${totalChildren > 0 ? `<div class="detail-row"><span class="detail-label">Children (4-11):</span><span class="detail-value">${totalChildren}</span></div>` : ''}
+      ${totalInfants > 0 ? `<div class="detail-row"><span class="detail-label">Infants (0-3):</span><span class="detail-value">${totalInfants}</span></div>` : ''}
 
-      <!-- Price Estimate -->
-      <div class="section-title" style="margin-top: 20px;">💰 Price Estimate</div>
+      <!-- Price -->
+      <div class="section-title">💰 Payment Summary</div>
       <div class="price-breakdown">
-        ${totalAdults > 0 ? `<div class="price-row"><span>Adults (18+) × ${totalAdults}</span><span>${data.currency} ${(totalAdults * adultPrice).toLocaleString()}</span></div>` : ''}
-        ${totalChildren > 0 ? `<div class="price-row"><span>Children (4-11) × ${totalChildren}</span><span>${data.currency} ${(totalChildren * childPrice).toLocaleString()}</span></div>` : ''}
-        ${totalInfants > 0 ? `<div class="price-row"><span>Infants (0-3) × ${totalInfants}</span><span>${data.currency} ${(totalInfants * infantPrice).toLocaleString()}</span></div>` : ''}
+        ${totalAdults > 0 ? `<div class="price-row"><span>Adults × ${totalAdults}</span><span>${data.currency || 'USD'} ${(totalAdults * adultPrice).toFixed(2)}</span></div>` : ''}
+        ${totalChildren > 0 ? `<div class="price-row"><span>Children (4-11) × ${totalChildren}</span><span>${data.currency || 'USD'} ${(totalChildren * childPrice).toFixed(2)}</span></div>` : ''}
+        ${totalInfants > 0 ? `<div class="price-row"><span>Infants (0-3) × ${totalInfants}</span><span>${data.currency || 'USD'} ${(totalInfants * infantPrice).toFixed(2)}</span></div>` : ''}
         <div class="price-total">
-          <span>Estimated Total</span>
-          <span>${data.currency} ${totalPrice.toLocaleString()}</span>
+          <span>Total Paid</span>
+          <span>${data.currency || 'USD'} ${totalPrice.toFixed(2)}</span>
         </div>
       </div>
-      <p style="font-size: 12px; color: #999; text-align: right; margin-top: -8px;">
-        * Final price may vary based on availability and group size
-      </p>
+
+      ${data.specialRequests ? `
+      <div class="section-title">📝 Special Requests</div>
+      <p style="background: #f5f0eb; padding: 12px; border-radius: 8px; font-size: 14px; margin: 0;">${data.specialRequests}</p>
+      ` : ''}
 
       <!-- Next Steps -->
-      <div class="section-title">📋 Next Steps</div>
+      <div class="section-title">📋 What Happens Next</div>
       <div class="steps">
         <div class="step">
           <div class="step-number">1</div>
-          <div class="step-content"><strong>Review</strong> – Our team will review your request and check availability.</div>
+          <div class="step-content"><strong>Confirmation Email</strong> – You have received your booking confirmation.</div>
         </div>
         <div class="step">
           <div class="step-number">2</div>
-          <div class="step-content"><strong>Contact</strong> – We will contact you via WhatsApp within 24 hours.</div>
+          <div class="step-content"><strong>Pre-Tour Details</strong> – We will contact you 24 hours before your tour.</div>
         </div>
         <div class="step">
           <div class="step-number">3</div>
-          <div class="step-content"><strong>Confirmation</strong> – Once details are finalized, we will send you a confirmation.</div>
+          <div class="step-content"><strong>Enjoy Your Tour</strong> – Meet your guide at the designated meeting point.</div>
         </div>
       </div>
 
       <!-- WhatsApp CTA -->
       <div style="text-align: center;">
-        <a href="https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '25377862639'}" class="whatsapp-btn">
-          💬 Chat with us on WhatsApp
+        <p style="color: #666; font-size: 14px; margin-bottom: 8px;">
+          📞 Have questions? Chat with us on WhatsApp
+        </p>
+        <a href="https://wa.me/25377862639" class="whatsapp-btn">
+          💬 Contact Us
         </a>
       </div>
 
@@ -323,8 +326,8 @@ export function getCustomerEmailHTML(data: {
         <div class="brand">Djibouti Explorer</div>
         <div class="tagline">Your gateway to East Africa's hidden gem</div>
         <div class="contact-info">
-          Have questions? Contact us directly:<br>
-          WhatsApp: <a href="https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '25377862639'}">+253 77 86 26 39</a> &nbsp;|&nbsp; Email: <a href="mailto:info@djiboutiexplorer.com">info@djiboutiexplorer.com</a>
+          WhatsApp: <a href="https://wa.me/25377862639">+253 77 86 26 39</a> &nbsp;|&nbsp; 
+          Email: <a href="mailto:info@djiboutiexplorer.com">info@djiboutiexplorer.com</a>
         </div>
         <p style="margin-top: 12px;">© ${new Date().getFullYear()} Djibouti Explorer. All rights reserved.</p>
       </div>
@@ -351,11 +354,14 @@ export function getAdminEmailHTML(data: {
   currency: string;
   specialRequests: string;
 }) {
-  const totalAdults = data.adults || data.guests || 0;
+  const totalAdults = data.adults || 0;
   const totalChildren = data.children || 0;
   const totalInfants = data.infants || 0;
   const totalGuests = totalAdults + totalChildren + totalInfants;
-  const totalPrice = (totalAdults * data.price) + (totalChildren * data.price * 0.7);
+  
+  const adultPrice = data.price;
+  const childPrice = Math.round(data.price * 0.7);
+  const totalPrice = (totalAdults * adultPrice) + (totalChildren * childPrice);
 
   return `
 <!DOCTYPE html>
@@ -363,7 +369,7 @@ export function getAdminEmailHTML(data: {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>New Tour Inquiry - ${data.reference}</title>
+  <title>New Booking - ${data.reference}</title>
   <style>
     body { 
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -414,6 +420,14 @@ export function getAdminEmailHTML(data: {
       color: #1E3D47;
       margin: 20px 0 12px 0;
     }
+    .price-total {
+      font-size: 18px;
+      font-weight: bold;
+      color: #1E3D47;
+      border-top: 2px solid #1E3D47;
+      padding-top: 10px;
+      margin-top: 10px;
+    }
     .whatsapp-btn {
       display: inline-block;
       background: #25D366;
@@ -439,23 +453,25 @@ export function getAdminEmailHTML(data: {
 <body>
   <div class="container">
     <div class="header">
-      <h2>🆕 New Tour Inquiry</h2>
-      <div class="badge">${data.reference}</div>
+      <h2>🆕 New Booking Received</h2>
+      <div class="badge">${data.reference || 'N/A'}</div>
     </div>
 
     <div class="section-title">👤 Customer Details</div>
-    <div class="row"><span><strong>Name:</strong></span> <span>${data.name}</span></div>
-    <div class="row"><span><strong>Email:</strong></span> <span><a href="mailto:${data.email}">${data.email}</a></span></div>
-    <div class="row"><span><strong>Phone:</strong></span> <span><a href="tel:${data.phone}">${data.phone}</a></span></div>
+    <div class="row"><span><strong>Name:</strong></span> <span>${data.name || 'N/A'}</span></div>
+    <div class="row"><span><strong>Email:</strong></span> <span><a href="mailto:${data.email}">${data.email || 'N/A'}</a></span></div>
+    <div class="row"><span><strong>Phone:</strong></span> <span><a href="tel:${data.phone}">${data.phone || 'N/A'}</a></span></div>
 
-    <div class="section-title">📋 Inquiry Details</div>
-    <div class="row"><span><strong>Tour:</strong></span> <span>${data.tourName}</span></div>
+    <div class="section-title">📋 Booking Details</div>
+    <div class="row"><span><strong>Tour:</strong></span> <span>${data.tourName || 'N/A'}</span></div>
     <div class="row"><span><strong>Date:</strong></span> <span>${data.date || 'Flexible'}</span></div>
-    <div class="row"><span><strong>Guests:</strong></span> <span>${totalGuests}</span></div>
+    <div class="row"><span><strong>Total Guests:</strong></span> <span><strong>${totalGuests}</strong></span></div>
     ${totalAdults > 0 ? `<div class="row"><span><strong>Adults:</strong></span> <span>${totalAdults}</span></div>` : ''}
-    ${totalChildren > 0 ? `<div class="row"><span><strong>Children:</strong></span> <span>${totalChildren}</span></div>` : ''}
-    ${totalInfants > 0 ? `<div class="row"><span><strong>Infants:</strong></span> <span>${totalInfants}</span></div>` : ''}
-    <div class="row"><span><strong>Estimated Total:</strong></span> <span><strong>${data.currency} ${totalPrice.toLocaleString()}</strong></span></div>
+    ${totalChildren > 0 ? `<div class="row"><span><strong>Children (4-11):</strong></span> <span>${totalChildren}</span></div>` : ''}
+    ${totalInfants > 0 ? `<div class="row"><span><strong>Infants (0-3):</strong></span> <span>${totalInfants}</span></div>` : ''}
+
+    <div class="section-title">💰 Payment</div>
+    <div class="row"><span><strong>Total Paid:</strong></span> <span><strong>${data.currency || 'USD'} ${totalPrice.toFixed(2)}</strong></span></div>
 
     ${data.specialRequests ? `
     <div class="section-title">📝 Special Requests</div>
