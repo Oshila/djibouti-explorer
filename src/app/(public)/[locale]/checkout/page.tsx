@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import type { SyntheticEvent } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { use } from 'react';
 import { getStripe } from '@/lib/stripe/client';
@@ -8,7 +9,7 @@ import { db } from '@/lib/firebase/client';
 import { doc, updateDoc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import { CreditCardIcon, LockClosedIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import {
   PaymentElement,
   useStripe,
@@ -17,11 +18,196 @@ import {
 } from '@stripe/react-stripe-js';
 import { getCustomerEmailHTML, getAdminEmailHTML } from '@/lib/email/templates';
 
-interface Props {
+type Props = {
   params: Promise<{ locale: string }>;
+};
+
+// ============================================
+// CAR EMAIL TEMPLATES
+// ============================================
+function getCarCustomerEmailHTML(data: any) {
+  const isEn = data.locale === 'en';
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Car Rental Confirmation</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f0eb; padding: 40px; }
+    .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; padding: 40px; }
+    .header { text-align: center; border-bottom: 2px solid #f2e8d4; padding-bottom: 20px; }
+    .logo { font-size: 24px; font-weight: bold; color: #1E3D47; }
+    .logo span { color: #C0532C; }
+    .badge { background: #72803A; color: white; padding: 4px 16px; border-radius: 20px; font-size: 12px; display: inline-block; }
+    .details { background: #f8f4ec; padding: 20px; border-radius: 12px; margin: 20px 0; }
+    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e8e0d4; }
+    .row:last-child { border-bottom: none; font-weight: bold; font-size: 18px; }
+    .footer { text-align: center; padding-top: 20px; border-top: 1px solid #f2e8d4; color: #999; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">Djibouti <span>Explorer</span></div>
+      <div class="badge">CAR RENTAL CONFIRMED</div>
+    </div>
+    <h2 style="color: #1E3D47;">${isEn ? 'Car Rental Confirmed!' : 'Location de Voiture Confirmée!'}</h2>
+    <p>${isEn ? `Hi ${data.name}, your car rental is confirmed.` : `Bonjour ${data.name}, votre location de voiture est confirmée.`}</p>
+    <div class="details">
+      <div class="row"><span>${isEn ? 'Reference' : 'Référence'}</span><span><strong>${data.reference}</strong></span></div>
+      <div class="row"><span>${isEn ? 'Vehicle' : 'Véhicule'}</span><span><strong>${data.carName}</strong></span></div>
+      <div class="row"><span>${isEn ? 'Pickup Date' : 'Date de Prise en Charge'}</span><span>${data.pickupDate}</span></div>
+      <div class="row"><span>${isEn ? 'Return Date' : 'Date de Retour'}</span><span>${data.returnDate}</span></div>
+      <div class="row"><span>${isEn ? 'Duration' : 'Durée'}</span><span>${data.days} ${isEn ? 'days' : 'jours'}</span></div>
+      <div class="row"><span>${isEn ? 'Total Paid' : 'Total Payé'}</span><span><strong>$${data.totalPrice}</strong></span></div>
+    </div>
+    <p style="text-align: center; color: #666;">${isEn ? 'A professional driver will be provided for your rental.' : 'Un chauffeur professionnel sera fourni pour votre location.'}</p>
+    <div class="footer">
+      <p>${isEn ? 'Thank you for choosing Djibouti Explorer!' : 'Merci d\'avoir choisi Djibouti Explorer!'}</p>
+      <p><a href="mailto:info@djiboutiexplorer.com">info@djiboutiexplorer.com</a></p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
 }
 
-function CheckoutForm({ bookingId, amount, itemName, validLocale, clientSecret }: any) {
+function getCarAdminEmailHTML(data: any) {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>New Car Rental Booking</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f0eb; padding: 40px; }
+    .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; padding: 40px; }
+    .header { border-bottom: 2px solid #f2e8d4; padding-bottom: 20px; }
+    .badge { background: #C0532C; color: white; padding: 4px 16px; border-radius: 20px; font-size: 12px; display: inline-block; }
+    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f2e8d4; }
+    .row:last-child { border-bottom: none; }
+    .footer { text-align: center; padding-top: 20px; border-top: 1px solid #f2e8d4; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2 style="color: #1E3D47;">New Car Rental Booking</h2>
+      <div class="badge">${data.reference}</div>
+    </div>
+    <h3>Customer Details</h3>
+    <div class="row"><span><strong>Name:</strong></span> <span>${data.name}</span></div>
+    <div class="row"><span><strong>Email:</strong></span> <span>${data.email}</span></div>
+    <div class="row"><span><strong>Phone:</strong></span> <span>${data.phone}</span></div>
+    <h3>Car Details</h3>
+    <div class="row"><span><strong>Vehicle:</strong></span> <span>${data.carName}</span></div>
+    <div class="row"><span><strong>Pickup:</strong></span> <span>${data.pickupDate}</span></div>
+    <div class="row"><span><strong>Return:</strong></span> <span>${data.returnDate}</span></div>
+    <div class="row"><span><strong>Duration:</strong></span> <span>${data.days} days</span></div>
+    <div class="row"><span><strong>Total:</strong></span> <span><strong>$${data.totalPrice}</strong></span></div>
+    ${data.specialRequests ? `<p><strong>Special Requests:</strong> ${data.specialRequests}</p>` : ''}
+    <div class="footer">Djibouti Explorer • ${new Date().getFullYear()}</div>
+  </div>
+</body>
+</html>
+  `;
+}
+
+// ============================================
+// VISA EMAIL TEMPLATES
+// ============================================
+function getVisaCustomerEmailHTML(data: any) {
+  const isEn = data.locale === 'en';
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Visa Invitation Letter Request</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f0eb; padding: 40px; }
+    .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; padding: 40px; }
+    .header { text-align: center; border-bottom: 2px solid #f2e8d4; padding-bottom: 20px; }
+    .logo { font-size: 24px; font-weight: bold; color: #1E3D47; }
+    .logo span { color: #C0532C; }
+    .badge { background: #72803A; color: white; padding: 4px 16px; border-radius: 20px; font-size: 12px; display: inline-block; }
+    .details { background: #f8f4ec; padding: 20px; border-radius: 12px; margin: 20px 0; }
+    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e8e0d4; }
+    .row:last-child { border-bottom: none; }
+    .footer { text-align: center; padding-top: 20px; border-top: 1px solid #f2e8d4; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">Djibouti <span>Explorer</span></div>
+      <div class="badge">VISA REQUEST CONFIRMED</div>
+    </div>
+    <h2 style="color: #1E3D47;">${isEn ? 'Visa Invitation Letter Request Received!' : 'Demande de Lettre d\'Invitation Visa Reçue!'}</h2>
+    <p>${isEn ? `Hi ${data.name}, your visa invitation letter request has been received.` : `Bonjour ${data.name}, votre demande de lettre d'invitation visa a été reçue.`}</p>
+    <div class="details">
+      <div class="row"><span>${isEn ? 'Full Name' : 'Nom Complet'}</span><span><strong>${data.fullName}</strong></span></div>
+      <div class="row"><span>${isEn ? 'Passport Number' : 'Numéro de Passeport'}</span><span><strong>${data.passportNumber}</strong></span></div>
+      <div class="row"><span>${isEn ? 'Nationality' : 'Nationalité'}</span><span>${data.nationality}</span></div>
+      <div class="row"><span>${isEn ? 'Arrival Date' : "Date d'Arrivée"}</span><span>${data.arrivalDate}</span></div>
+      <div class="row"><span>${isEn ? 'Departure Date' : 'Date de Départ'}</span><span>${data.departureDate}</span></div>
+      <div class="row"><span>${isEn ? 'Total Paid' : 'Total Payé'}</span><span><strong>$${data.totalPrice}</strong></span></div>
+    </div>
+    <p style="text-align: center; color: #666;">${isEn ? 'Our team will process your request within 24-48 hours.' : 'Notre équipe traitera votre demande sous 24-48 heures.'}</p>
+    <div class="footer">
+      <p><a href="mailto:info@djiboutiexplorer.com">info@djiboutiexplorer.com</a></p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+}
+
+function getVisaAdminEmailHTML(data: any) {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>New Visa Request</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f0eb; padding: 40px; }
+    .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; padding: 40px; }
+    .header { border-bottom: 2px solid #f2e8d4; padding-bottom: 20px; }
+    .badge { background: #C0532C; color: white; padding: 4px 16px; border-radius: 20px; font-size: 12px; display: inline-block; }
+    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f2e8d4; }
+    .row:last-child { border-bottom: none; }
+    .footer { text-align: center; padding-top: 20px; border-top: 1px solid #f2e8d4; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2 style="color: #1E3D47;">New Visa Request</h2>
+      <div class="badge">${data.reference || 'PENDING'}</div>
+    </div>
+    <h3>Applicant Details</h3>
+    <div class="row"><span><strong>Name:</strong></span> <span>${data.fullName}</span></div>
+    <div class="row"><span><strong>Email:</strong></span> <span>${data.email}</span></div>
+    <div class="row"><span><strong>Phone:</strong></span> <span>${data.phone}</span></div>
+    <h3>Visa Details</h3>
+    <div class="row"><span><strong>Passport:</strong></span> <span>${data.passportNumber}</span></div>
+    <div class="row"><span><strong>Nationality:</strong></span> <span>${data.nationality}</span></div>
+    <div class="row"><span><strong>Arrival:</strong></span> <span>${data.arrivalDate}</span></div>
+    <div class="row"><span><strong>Departure:</strong></span> <span>${data.departureDate}</span></div>
+    <div class="row"><span><strong>Total:</strong></span> <span><strong>$${data.totalPrice}</strong></span></div>
+    <div class="footer">Djibouti Explorer • ${new Date().getFullYear()}</div>
+  </div>
+</body>
+</html>
+  `;
+}
+
+// ============================================
+// CHECKOUT FORM
+// ============================================
+function CheckoutForm({ bookingId, amount, itemName, validLocale, bookingType }: any) {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
@@ -35,18 +221,28 @@ function CheckoutForm({ bookingId, amount, itemName, validLocale, clientSecret }
     async function fetchBooking() {
       if (!bookingId) return;
       try {
-        const docSnap = await getDoc(doc(db, 'bookings', bookingId));
-        if (docSnap.exists()) {
+        let docSnap;
+        if (bookingType === 'car') {
+          docSnap = await getDoc(doc(db, 'carBookings', bookingId));
+        } else if (bookingType === 'visa') {
+          docSnap = await getDoc(doc(db, 'visaRequests', bookingId));
+        } else {
+          docSnap = await getDoc(doc(db, 'bookings', bookingId));
+        }
+        if (docSnap?.exists()) {
           setBookingData(docSnap.data());
+          console.log('✅ Booking data fetched:', docSnap.data());
+        } else {
+          console.log('❌ No booking found for ID:', bookingId, 'type:', bookingType);
         }
       } catch (error) {
         console.error('Error fetching booking:', error);
       }
     }
     fetchBooking();
-  }, [bookingId]);
+  }, [bookingId, bookingType]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!stripe || !elements) {
@@ -60,7 +256,7 @@ function CheckoutForm({ bookingId, amount, itemName, validLocale, clientSecret }
       const { error: submitError, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/${validLocale}/booking/confirmation/${bookingId}`,
+          return_url: `${window.location.origin}/${validLocale}/checkout/success`,
         },
         redirect: 'if_required',
       });
@@ -69,103 +265,197 @@ function CheckoutForm({ bookingId, amount, itemName, validLocale, clientSecret }
         throw new Error(submitError.message);
       }
 
-      // If payment succeeded
       if (bookingId && paymentIntent) {
+        let collectionName = 'bookings';
+        if (bookingType === 'car') collectionName = 'carBookings';
+        else if (bookingType === 'visa') collectionName = 'visaRequests';
+        
         // Update booking status
-        await updateDoc(doc(db, 'bookings', bookingId), {
+        await updateDoc(doc(db, collectionName, bookingId), {
           paymentStatus: 'paid',
           paymentIntentId: paymentIntent.id,
           updatedAt: new Date().toISOString(),
         });
 
-        // ⭐ SAVE PAYMENT TO PAYMENTS COLLECTION
+        // Save payment to payments collection
         await addDoc(collection(db, 'payments'), {
           bookingId: bookingId,
           paymentIntentId: paymentIntent.id,
           amount: amount,
           currency: 'usd',
           status: paymentIntent.status || 'succeeded',
-          type: 'tour',
+          type: bookingType || 'tour',
           metadata: {
             bookingId: bookingId,
-            customerName: bookingData?.customer?.firstName + ' ' + bookingData?.customer?.lastName || 'Customer',
-            customerEmail: bookingData?.customer?.email || '',
+            customerName: bookingData?.customer?.firstName + ' ' + bookingData?.customer?.lastName || 
+                         bookingData?.fullName || 'Customer',
+            customerEmail: bookingData?.customer?.email || bookingData?.email || '',
           },
-          customerEmail: bookingData?.customer?.email || '',
+          customerEmail: bookingData?.customer?.email || bookingData?.email || '',
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
 
-        // Fetch fresh booking data for email
-        const freshBookingSnap = await getDoc(doc(db, 'bookings', bookingId));
-        const freshBookingData = freshBookingSnap.data();
+        const customerEmail = bookingData?.customer?.email || bookingData?.email || '';
+        console.log('📧 Sending emails for:', bookingType);
 
-        if (freshBookingData) {
-          const customerName = `${freshBookingData?.customer?.firstName || ''} ${freshBookingData?.customer?.lastName || ''}`.trim() || 'Guest';
-          const customerEmail = freshBookingData?.customer?.email || '';
-          const travellers = freshBookingData?.travellers || { adults: 0, children: 0, infants: 0 };
+        // ============================================
+        // SEND CUSTOMER EMAIL
+        // ============================================
+        let customerHTML = '';
+        let customerSubject = '';
+
+        if (bookingType === 'tour') {
+          const customerName = `${bookingData?.customer?.firstName || ''} ${bookingData?.customer?.lastName || ''}`.trim() || 'Guest';
+          const travellers = bookingData?.travellers || { adults: 0, children: 0, infants: 0 };
           const totalGuests = (travellers.adults || 0) + (travellers.children || 0) + (travellers.infants || 0);
 
-          // Send customer email
-          if (customerEmail) {
-            const customerEmailHTML = getCustomerEmailHTML({
-              name: customerName,
-              reference: freshBookingData?.bookingReference || bookingId,
-              tourName: itemName,
-              date: freshBookingData?.date || 'Flexible',
-              guests: totalGuests,
-              adults: travellers.adults || 0,
-              children: travellers.children || 0,
-              infants: travellers.infants || 0,
-              price: amount,
-              currency: 'USD',
-              email: customerEmail,
-              phone: freshBookingData?.customer?.phone || '',
-              specialRequests: freshBookingData?.specialRequests || '',
-            });
-
-            await fetch('/api/send-email', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                to: customerEmail,
-                subject: `Booking Confirmed! 🎉 - ${freshBookingData?.bookingReference || bookingId}`,
-                html: customerEmailHTML,
-              }),
-            });
-          }
-
-          // Send admin email
-          const adminEmailHTML = getAdminEmailHTML({
+          customerHTML = getCustomerEmailHTML({
             name: customerName,
-            email: customerEmail || 'No email provided',
-            phone: freshBookingData?.customer?.phone || 'No phone provided',
-            reference: freshBookingData?.bookingReference || bookingId,
+            reference: bookingData?.bookingReference || bookingId,
             tourName: itemName,
-            date: freshBookingData?.date || 'Flexible',
+            date: bookingData?.date || 'Flexible',
             guests: totalGuests,
             adults: travellers.adults || 0,
             children: travellers.children || 0,
             infants: travellers.infants || 0,
             price: amount,
             currency: 'USD',
-            specialRequests: freshBookingData?.specialRequests || '',
+            email: customerEmail,
+            phone: bookingData?.customer?.phone || '',
+            specialRequests: bookingData?.specialRequests || '',
           });
+          customerSubject = `Booking Confirmed - ${bookingData?.bookingReference || bookingId}`;
+        } else if (bookingType === 'car') {
+          const customerName = `${bookingData?.customer?.firstName || ''} ${bookingData?.customer?.lastName || ''}`.trim() || 'Guest';
+          customerHTML = getCarCustomerEmailHTML({
+            name: customerName,
+            reference: bookingData?.bookingReference || bookingId,
+            carName: bookingData?.carName || itemName,
+            pickupDate: bookingData?.pickupDate || 'Flexible',
+            returnDate: bookingData?.returnDate || 'Flexible',
+            days: bookingData?.totalDays || 1,
+            totalPrice: amount,
+            locale: validLocale,
+          });
+          customerSubject = `Car Rental Confirmed - ${bookingData?.bookingReference || bookingId}`;
+        } else if (bookingType === 'visa') {
+          customerHTML = getVisaCustomerEmailHTML({
+            name: bookingData?.fullName || 'Guest',
+            fullName: bookingData?.fullName || '',
+            passportNumber: bookingData?.passportNumber || '',
+            nationality: bookingData?.nationality || '',
+            arrivalDate: bookingData?.arrivalDate || '',
+            departureDate: bookingData?.departureDate || '',
+            totalPrice: amount,
+            locale: validLocale,
+          });
+          customerSubject = `Visa Request Confirmed - ${bookingId.slice(0, 8)}`;
+        }
 
+        // Send customer email
+        if (customerHTML && customerEmail) {
           await fetch('/api/send-email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              to: 'info@djiboutiexplorer.com',
-              subject: `New Booking! 🎉 - ${freshBookingData?.bookingReference || bookingId}`,
-              html: adminEmailHTML,
+              to: customerEmail,
+              subject: customerSubject,
+              html: customerHTML,
             }),
           });
+          console.log('✅ Customer email sent to:', customerEmail);
+        }
+
+        // ============================================
+        // SEND ADMIN EMAIL (ALWAYS!)
+        // ============================================
+        let adminHTML = '';
+        let adminSubject = '';
+
+        if (bookingType === 'tour') {
+          const customerName = `${bookingData?.customer?.firstName || ''} ${bookingData?.customer?.lastName || ''}`.trim() || 'Guest';
+          const travellers = bookingData?.travellers || { adults: 0, children: 0, infants: 0 };
+          const totalGuests = (travellers.adults || 0) + (travellers.children || 0) + (travellers.infants || 0);
+
+          adminHTML = getAdminEmailHTML({
+            name: customerName,
+            email: customerEmail || 'No email provided',
+            phone: bookingData?.customer?.phone || 'No phone provided',
+            reference: bookingData?.bookingReference || bookingId,
+            tourName: itemName,
+            date: bookingData?.date || 'Flexible',
+            guests: totalGuests,
+            adults: travellers.adults || 0,
+            children: travellers.children || 0,
+            infants: travellers.infants || 0,
+            price: amount,
+            currency: 'USD',
+            specialRequests: bookingData?.specialRequests || '',
+          });
+          adminSubject = `New Tour Booking - ${bookingData?.bookingReference || bookingId}`;
+        } else if (bookingType === 'car') {
+          const customerName = `${bookingData?.customer?.firstName || ''} ${bookingData?.customer?.lastName || ''}`.trim() || 'Guest';
+          adminHTML = getCarAdminEmailHTML({
+            name: customerName,
+            email: customerEmail || 'No email provided',
+            phone: bookingData?.customer?.phone || 'No phone provided',
+            reference: bookingData?.bookingReference || bookingId,
+            carName: bookingData?.carName || itemName,
+            pickupDate: bookingData?.pickupDate || 'Flexible',
+            returnDate: bookingData?.returnDate || 'Flexible',
+            days: bookingData?.totalDays || 1,
+            totalPrice: amount,
+            specialRequests: bookingData?.specialRequests || '',
+          });
+          adminSubject = `New Car Rental - ${bookingData?.bookingReference || bookingId}`;
+        } else if (bookingType === 'visa') {
+          adminHTML = getVisaAdminEmailHTML({
+            fullName: bookingData?.fullName || '',
+            email: customerEmail || 'No email provided',
+            phone: bookingData?.phone || 'No phone provided',
+            passportNumber: bookingData?.passportNumber || '',
+            nationality: bookingData?.nationality || '',
+            arrivalDate: bookingData?.arrivalDate || '',
+            departureDate: bookingData?.departureDate || '',
+            totalPrice: amount,
+            reference: bookingId.slice(0, 8),
+          });
+          adminSubject = `New Visa Request - ${bookingId.slice(0, 8)}`;
+        }
+
+        // ⭐ ALWAYS SEND ADMIN EMAIL
+        if (adminHTML) {
+          console.log('📧 Sending admin email:', adminSubject);
+          const adminResponse = await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: 'info@djiboutiexplorer.com',
+              subject: adminSubject,
+              html: adminHTML,
+            }),
+          });
+
+          if (adminResponse.ok) {
+            console.log('✅ Admin email sent successfully');
+          } else {
+            const errorText = await adminResponse.text();
+            console.error('❌ Admin email failed:', errorText);
+          }
         }
       }
 
       toast.success('Payment successful!');
-      router.push(`/${validLocale}/booking/confirmation/${bookingId}`);
+      
+      // Redirect based on booking type
+      if (bookingType === 'car') {
+        router.push(`/${validLocale}/cars`);
+      } else if (bookingType === 'visa') {
+        router.push(`/${validLocale}/visa`);
+      } else {
+        router.push(`/${validLocale}/booking/confirmation/${bookingId}`);
+      }
 
     } catch (err: any) {
       console.error('Payment error:', err);
@@ -227,6 +517,9 @@ function CheckoutForm({ bookingId, amount, itemName, validLocale, clientSecret }
   );
 }
 
+// ============================================
+// MAIN CHECKOUT PAGE
+// ============================================
 export default function CheckoutPage({ params }: Props) {
   const { locale } = use(params);
   const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
@@ -238,6 +531,7 @@ export default function CheckoutPage({ params }: Props) {
   const [amount, setAmount] = useState(0);
   const [itemName, setItemName] = useState('');
   const [bookingId, setBookingId] = useState('');
+  const [bookingType, setBookingType] = useState<string>('tour');
   const [error, setError] = useState<string | null>(null);
 
   const isEn = validLocale === 'en';
@@ -248,6 +542,8 @@ export default function CheckoutPage({ params }: Props) {
     const name = searchParams.get('name') || 'Tour';
     const price = parseFloat(searchParams.get('price') || '0');
 
+    console.log('🔍 Checkout params:', { type, id, name, price });
+
     if (!type || !id || !price) {
       toast.error('Missing payment information');
       router.push(`/${validLocale}`);
@@ -257,6 +553,7 @@ export default function CheckoutPage({ params }: Props) {
     setItemName(name);
     setAmount(price);
     setBookingId(id);
+    setBookingType(type);
   }, [searchParams, router, validLocale]);
 
   useEffect(() => {
@@ -267,6 +564,8 @@ export default function CheckoutPage({ params }: Props) {
         setLoading(true);
         setError(null);
         
+        console.log('💳 Creating payment intent for:', { amount, bookingId, bookingType });
+        
         const response = await fetch('/api/create-payment-intent', {
           method: 'POST',
           headers: {
@@ -275,7 +574,7 @@ export default function CheckoutPage({ params }: Props) {
           body: JSON.stringify({
             amount: amount,
             currency: 'usd',
-            type: 'tour',
+            type: bookingType,
             metadata: {
               bookingId: bookingId,
               customerName: 'Customer',
@@ -287,6 +586,8 @@ export default function CheckoutPage({ params }: Props) {
 
         const data = await response.json();
         
+        console.log('📨 Payment intent response:', data);
+        
         if (!response.ok) {
           throw new Error(data.error || 'Failed to create payment intent');
         }
@@ -297,7 +598,7 @@ export default function CheckoutPage({ params }: Props) {
 
         setClientSecret(data.clientSecret);
       } catch (error: any) {
-        console.error('Payment initialization error:', error);
+        console.error('❌ Payment initialization error:', error);
         setError(error.message || 'Failed to initialize payment');
         toast.error(error.message || 'Failed to initialize payment');
       } finally {
@@ -306,7 +607,7 @@ export default function CheckoutPage({ params }: Props) {
     };
 
     initializePayment();
-  }, [amount, bookingId, itemName]);
+  }, [amount, bookingId, bookingType, itemName]);
 
   if (loading) {
     return (
@@ -333,7 +634,7 @@ export default function CheckoutPage({ params }: Props) {
               href={`/${validLocale}/booking/${searchParams.get('tourSlug') || ''}`}
               className="inline-block mt-4 text-teal hover:text-terracotta transition-colors"
             >
-              {isEn ? '← Back to Booking' : '← Retour à la Réservation'}
+              {isEn ? 'Back to Booking' : 'Retour à la Réservation'}
             </Link>
           </div>
         </div>
@@ -377,7 +678,7 @@ export default function CheckoutPage({ params }: Props) {
               amount={amount}
               itemName={itemName}
               validLocale={validLocale}
-              clientSecret={clientSecret}
+              bookingType={bookingType}
             />
           </Elements>
         </div>

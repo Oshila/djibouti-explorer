@@ -7,10 +7,11 @@ import {
   collection, 
   query, 
   getDocs, 
+  deleteDoc, 
   doc, 
   updateDoc,
-  deleteDoc,
-  orderBy 
+  orderBy,
+  getDoc
 } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { 
@@ -101,14 +102,30 @@ export default function AdminBookings() {
     }
   };
 
+  // ⭐ FIXED: Delete with proper error handling
   const deleteBooking = async (id: string, reference: string) => {
     if (!confirm(`Delete booking ${reference}? This cannot be undone.`)) return;
     try {
-      await deleteDoc(doc(db, 'bookings', id));
-      toast.success('Booking deleted');
+      // Check if the document exists first
+      const docRef = doc(db, 'bookings', id);
+      const docSnap = await getDoc(docRef);
+      
+      if (!docSnap.exists()) {
+        toast.error('Booking not found');
+        fetchBookings();
+        return;
+      }
+      
+      await deleteDoc(docRef);
+      toast.success('Booking deleted successfully');
       fetchBookings();
-    } catch (error) {
-      toast.error('Failed to delete booking');
+    } catch (error: any) {
+      console.error('Error deleting booking:', error);
+      if (error.code === 'permission-denied') {
+        toast.error('Permission denied. You need admin access to delete bookings.');
+      } else {
+        toast.error(error.message || 'Failed to delete booking');
+      }
     }
   };
 
@@ -285,7 +302,7 @@ export default function AdminBookings() {
                         </button>
                       )}
 
-                      {/* Delete Button - Always visible */}
+                      {/* Delete Button */}
                       <button
                         onClick={() => deleteBooking(booking.id, booking.bookingReference || booking.id.slice(0, 8))}
                         className="px-3 py-1.5 bg-terracotta/10 text-terracotta hover:bg-terracotta/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"

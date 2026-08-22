@@ -67,7 +67,7 @@ export default function VisaPage() {
         edit: 'Edit',
       },
       complete: {
-        title: 'Request Sent! 🎉',
+        title: 'Request Sent!',
         message: 'Your visa invitation letter request has been received. Our team will review your information and contact you shortly.',
         next: 'Back to Home',
       },
@@ -99,7 +99,7 @@ export default function VisaPage() {
         edit: 'Modifier',
       },
       complete: {
-        title: 'Demande envoyée ! 🎉',
+        title: 'Demande envoyée !',
         message: "Votre demande de lettre d'invitation de visa a été reçue. Notre équipe examinera vos informations et vous contactera sous peu.",
         next: "Retour à l'accueil",
       },
@@ -127,47 +127,47 @@ export default function VisaPage() {
            formData.nationality && formData.arrivalDate && formData.departureDate;
   };
 
-  // ⭐ Updated: Save to Firestore and redirect to Stripe checkout
   const handleSubmit = async () => {
-  setIsSubmitting(true);
-  
-  try {
-    // Save visa request to Firestore
-    const docRef = await addDoc(collection(db, 'visaRequests'), {
-      ...formData,
-      status: 'pending',
-      paymentStatus: 'pending',
-      createdAt: serverTimestamp(),
-    });
+    setIsSubmitting(true);
     
-    // ⭐ Also create a payment record
-    await addDoc(collection(db, 'payments'), {
-      visaRequestId: docRef.id,
-      amount: 23,
-      currency: 'usd',
-      status: 'pending',
-      type: 'visa',
-      metadata: {
+    try {
+      // Save visa request to Firestore
+      const docRef = await addDoc(collection(db, 'visaRequests'), {
+        ...formData,
+        status: 'pending',
+        paymentStatus: 'pending',
+        createdAt: serverTimestamp(),
+      });
+      
+      // Also create a payment record
+      await addDoc(collection(db, 'payments'), {
         visaRequestId: docRef.id,
-        customerName: formData.fullName,
+        amount: 23,
+        currency: 'usd',
+        status: 'pending',
+        type: 'visa',
+        metadata: {
+          visaRequestId: docRef.id,
+          customerName: formData.fullName,
+          customerEmail: formData.email,
+        },
         customerEmail: formData.email,
-      },
-      customerEmail: formData.email,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-    
-    // Redirect to Stripe checkout
-    const checkoutUrl = `/${locale}/checkout?type=visa&id=${docRef.id}&name=${encodeURIComponent('Visa Invitation Letter')}&price=23`;
-    router.push(checkoutUrl);
-    
-  } catch (error) {
-    console.error('Error saving visa request:', error);
-    toast.error('Failed to submit request. Please try again.');
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      
+      // Redirect to Stripe checkout - the checkout page will handle emails
+      const checkoutUrl = `/${locale}/checkout?type=visa&id=${docRef.id}&name=${encodeURIComponent('Visa Invitation Letter')}&price=23`;
+      router.push(checkoutUrl);
+      
+    } catch (error) {
+      console.error('Error saving visa request:', error);
+      toast.error('Failed to submit request. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const renderStep1 = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -380,13 +380,11 @@ export default function VisaPage() {
   return (
     <div className="bg-cream min-h-screen py-12">
       <div className="container-custom max-w-4xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-heading text-teal mb-4">{t.title}</h1>
           <p className="text-lg text-nearblack/70">{t.subtitle}</p>
         </div>
 
-        {/* Features */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {t.features.map((feature, index) => {
             const Icon = feature.icon;
@@ -402,9 +400,7 @@ export default function VisaPage() {
           })}
         </div>
 
-        {/* Steps */}
         <div className="bg-white rounded-2xl shadow-sm border border-cream p-6 md:p-8">
-          {/* Step Indicator */}
           <div className="flex items-center justify-between mb-8">
             {t.steps.map((label, index) => {
               const stepNumber = index + 1;
@@ -442,7 +438,6 @@ export default function VisaPage() {
             })}
           </div>
 
-          {/* Step Content */}
           {step === 1 && renderStep1()}
           {step === 2 && renderStep2()}
           {step === 3 && renderStep3()}
