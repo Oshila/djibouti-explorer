@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       currentY -= 24;
       drawText("Numéro d'immatriculation N° 24506/A", 140, currentY, 10);
       currentY -= 16;
-      drawText('Saline Ouest, Djibouti', 140, currentY, 10);
+      drawText('Quartier 4, 77003 Djibouti', 140, currentY, 10);
       currentY -= 16;
       drawText('+253 77 86 26 39', 140, currentY, 10);
       currentY -= 16;
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       currentY -= 24;
       drawText("Numéro d'immatriculation N° 24506/A", 50, currentY, 10);
       currentY -= 16;
-      drawText('Saline Ouest, Djibouti', 50, currentY, 10);
+      drawText('Quartier 4, 77003 Djibouti', 50, currentY, 10);
       currentY -= 16;
       drawText('+253 77 86 26 39', 50, currentY, 10);
       currentY -= 16;
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     drawText('Cordialement,', 50, y, 11);
     y -= 40;
 
-    drawText('Idriss Hamadou Kamil', 50, y, 12, true);
+    drawText('Moussa Hamadou Kamil', 50, y, 12, true);
     y -= 18;
     drawText('CEO, Djibouti Explorer', 50, y, 11);
     y -= 16;
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
     y -= 25;
     drawText(`Référence: ${data.reference}`, 50, y, 10);
 
-    drawText('Djibouti Explorer - Saline Ouest, Djibouti - +253 77 86 26 39 - info@djiboutiexplorer.com', 50, 50, 9);
+    drawText('Djibouti Explorer - Quartier 4, 77003 Djibouti - +253 77 86 26 39 - info@djiboutiexplorer.com', 50, 50, 9);
 
     const pdfBytes = await pdfDoc.save();
     const pdfBuffer = Buffer.from(pdfBytes);
