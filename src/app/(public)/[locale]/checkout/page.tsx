@@ -17,6 +17,8 @@ import {
   Elements,
 } from '@stripe/react-stripe-js';
 import { getCustomerEmailHTML, getAdminEmailHTML } from '@/lib/email/templates';
+// ⭐ Import the PDF generator
+import { generateVisaPDF } from '@/lib/pdf/generateVisaPDF';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -269,7 +271,7 @@ function CheckoutForm({ bookingId, amount, itemName, validLocale, bookingType }:
         let collectionName = 'bookings';
         if (bookingType === 'car') collectionName = 'carBookings';
         else if (bookingType === 'visa') collectionName = 'visaRequests';
-        
+
         // Update booking status
         await updateDoc(doc(db, collectionName, bookingId), {
           paymentStatus: 'paid',
@@ -287,8 +289,8 @@ function CheckoutForm({ bookingId, amount, itemName, validLocale, bookingType }:
           type: bookingType || 'tour',
           metadata: {
             bookingId: bookingId,
-            customerName: bookingData?.customer?.firstName + ' ' + bookingData?.customer?.lastName || 
-                         bookingData?.fullName || 'Customer',
+            customerName: bookingData?.customer?.firstName + ' ' + bookingData?.customer?.lastName ||
+              bookingData?.fullName || 'Customer',
             customerEmail: bookingData?.customer?.email || bookingData?.email || '',
           },
           customerEmail: bookingData?.customer?.email || bookingData?.email || '',
@@ -444,10 +446,62 @@ function CheckoutForm({ bookingId, amount, itemName, validLocale, bookingType }:
             console.error('❌ Admin email failed:', errorText);
           }
         }
+
+        // ============================================
+        // ⭐ VISA PDF GENERATION (Only for visa bookings)
+        // ============================================
+        if (bookingType === 'visa' && bookingData) {
+          try {
+            console.log('📄 Generating Visa PDF for:', bookingData.fullName);
+
+            // Generate PDF
+            const pdfResponse = await fetch('/api/generate-visa-pdf', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                fullName: bookingData.fullName || '',
+                passportNumber: bookingData.passportNumber || '',
+                nationality: bookingData.nationality || '',
+                arrivalDate: bookingData.arrivalDate || '',
+                departureDate: bookingData.departureDate || '',
+                reference: bookingId.slice(0, 8),
+                createdAt: new Date().toISOString(),
+              }),
+            });
+
+            const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
+
+            // Convert to base64 for email attachment
+            const pdfBase64 = pdfBuffer.toString('base64');
+
+            // Send email with PDF attachment
+            const visaPDFResponse = await fetch('/api/send-email-with-pdf', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: customerEmail,
+                subject: `Visa Invitation Letter - ${bookingId.slice(0, 8)}`,
+                html: customerHTML,
+                pdfAttachment: {
+                  filename: `visa-invitation-${bookingId.slice(0, 8)}.pdf`,
+                  content: pdfBase64,
+                },
+              }),
+            });
+
+            if (visaPDFResponse.ok) {
+              console.log('✅ Visa invitation PDF sent to:', customerEmail);
+            } else {
+              console.error('❌ Failed to send visa PDF');
+            }
+          } catch (pdfError) {
+            console.error('❌ PDF generation error:', pdfError);
+          }
+        }
       }
 
       toast.success('Payment successful!');
-      
+
       // Redirect based on booking type
       if (bookingType === 'car') {
         router.push(`/${validLocale}/cars`);
@@ -525,7 +579,7 @@ export default function CheckoutPage({ params }: Props) {
   const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
   const searchParams = useSearchParams();
   const router = useRouter();
-  
+
   const [loading, setLoading] = useState(true);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [amount, setAmount] = useState(0);
@@ -563,9 +617,9 @@ export default function CheckoutPage({ params }: Props) {
       try {
         setLoading(true);
         setError(null);
-        
+
         console.log('💳 Creating payment intent for:', { amount, bookingId, bookingType });
-        
+
         const response = await fetch('/api/create-payment-intent', {
           method: 'POST',
           headers: {
@@ -585,9 +639,9 @@ export default function CheckoutPage({ params }: Props) {
         });
 
         const data = await response.json();
-        
+
         console.log('📨 Payment intent response:', data);
-        
+
         if (!response.ok) {
           throw new Error(data.error || 'Failed to create payment intent');
         }
