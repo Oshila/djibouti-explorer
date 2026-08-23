@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { db } from '@/lib/firebase/client';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { 
   CheckIcon, 
   ChevronRightIcon,
@@ -29,6 +29,14 @@ interface FormData {
   departureDate: string;
 }
 
+interface VisaSettings {
+  price: number;
+  currency: string;
+  processingTime: string;
+  description: string;
+  isActive: boolean;
+}
+
 export default function VisaPage() {
   const params = useParams();
   const router = useRouter();
@@ -45,6 +53,32 @@ export default function VisaPage() {
     departureDate: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [settings, setSettings] = useState<VisaSettings>({
+    price: 23,
+    currency: 'USD',
+    processingTime: '24-48 hours',
+    description: 'Official visa invitation letter for Djibouti',
+    isActive: true,
+  });
+  const [loadingSettings, setLoadingSettings] = useState(true);
+
+  // ⭐ Fetch visa settings from Firestore
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const docRef = doc(db, 'settings', 'visa');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setSettings(docSnap.data() as VisaSettings);
+        }
+      } catch (error) {
+        console.error('Error fetching visa settings:', error);
+      } finally {
+        setLoadingSettings(false);
+      }
+    }
+    fetchSettings();
+  }, []);
 
   const content = {
     en: {
@@ -73,10 +107,9 @@ export default function VisaPage() {
       },
       features: [
         { icon: GlobeAltIcon, title: 'Global Access', desc: 'Available for all nationalities eligible for a visa to Djibouti.' },
-        { icon: ClockIcon, title: 'Fast Track', desc: 'Standard processing within 24-48 hours of payment.' },
+        { icon: ClockIcon, title: 'Fast Track', desc: `Processing within ${settings.processingTime} of payment.` },
         { icon: ShieldCheckIcon, title: 'Secure', desc: 'Encrypted data processing and secure Stripe payment.' },
       ],
-      payment: 'Payment: $23 USD (Visa Fee)',
       paymentNote: 'You will be redirected to Stripe to complete your payment securely.',
     },
     fr: {
@@ -105,10 +138,9 @@ export default function VisaPage() {
       },
       features: [
         { icon: GlobeAltIcon, title: 'Accès Mondial', desc: 'Disponible pour toutes les nationalités éligibles au visa pour Djibouti.' },
-        { icon: ClockIcon, title: 'Rapide', desc: 'Traitement standard sous 24-48 heures après paiement.' },
+        { icon: ClockIcon, title: 'Rapide', desc: `Traitement sous ${settings.processingTime} après paiement.` },
         { icon: ShieldCheckIcon, title: 'Sécurisé', desc: 'Traitement des données crypté et paiement sécurisé Stripe.' },
       ],
-      payment: 'Paiement : 23 $ USD (Frais de visa)',
       paymentNote: 'Vous serez redirigé vers Stripe pour compléter votre paiement en toute sécurité.',
     }
   };
@@ -142,8 +174,8 @@ export default function VisaPage() {
       // Also create a payment record
       await addDoc(collection(db, 'payments'), {
         visaRequestId: docRef.id,
-        amount: 23,
-        currency: 'usd',
+        amount: settings.price,
+        currency: settings.currency.toLowerCase(),
         status: 'pending',
         type: 'visa',
         metadata: {
@@ -156,8 +188,8 @@ export default function VisaPage() {
         updatedAt: serverTimestamp(),
       });
       
-      // Redirect to Stripe checkout - the checkout page will handle emails
-      const checkoutUrl = `/${locale}/checkout?type=visa&id=${docRef.id}&name=${encodeURIComponent('Visa Invitation Letter')}&price=23`;
+      // Redirect to Stripe checkout
+      const checkoutUrl = `/${locale}/checkout?type=visa&id=${docRef.id}&name=${encodeURIComponent('Visa Invitation Letter')}&price=${settings.price}`;
       router.push(checkoutUrl);
       
     } catch (error) {
@@ -278,11 +310,13 @@ export default function VisaPage() {
         <div className="flex items-center gap-3">
           <CreditCardIcon className="w-5 h-5 text-olive" />
           <div>
-            <p className="text-sm font-medium text-olive">{t.payment}</p>
+            <p className="text-sm font-medium text-olive">
+              {isEn ? 'Payment:' : 'Paiement :'} ${settings.price} {settings.currency} ({isEn ? 'Visa Fee' : 'Frais de visa'})
+            </p>
             <p className="text-xs text-nearblack/50">
               {isEn 
-                ? 'You will be redirected to Stripe to complete payment.' 
-                : 'Vous serez redirigé vers Stripe pour effectuer le paiement.'}
+                ? `Processing time: ${settings.processingTime}` 
+                : `Délai de traitement: ${settings.processingTime}`}
             </p>
           </div>
         </div>
@@ -334,7 +368,9 @@ export default function VisaPage() {
         </div>
         
         <div className="border-t border-cream pt-4">
-          <p className="text-sm font-medium text-olive">{t.payment}</p>
+          <p className="text-sm font-medium text-olive">
+            {isEn ? 'Payment:' : 'Paiement :'} ${settings.price} {settings.currency}
+          </p>
           <p className="text-xs text-nearblack/50">
             {isEn 
               ? 'Payment will be processed via Stripe.' 
@@ -352,8 +388,12 @@ export default function VisaPage() {
         </button>
         <button
           onClick={handleSubmit}
-          disabled={isSubmitting}
-          className="flex-1 py-3.5 rounded-xl font-medium bg-terracotta hover:bg-terracotta/90 text-white transition-all hover:shadow-lg disabled:opacity-50"
+          disabled={isSubmitting || !settings.isActive}
+          className={`flex-1 py-3.5 rounded-xl font-medium transition-all hover:shadow-lg disabled:opacity-50 ${
+            isSubmitting || !settings.isActive
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : 'bg-terracotta hover:bg-terracotta/90 text-white'
+          }`}
         >
           {isSubmitting ? t.form.submitting : t.review.confirm}
         </button>
@@ -376,6 +416,17 @@ export default function VisaPage() {
       </Link>
     </div>
   );
+
+  if (loadingSettings) {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-teal border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-nearblack/60">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-cream min-h-screen py-12">

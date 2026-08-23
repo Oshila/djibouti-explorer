@@ -104,6 +104,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Payment History', href: '/admin/payments', icon: MapPinIcon },
     { name: 'Bookings', href: '/admin/bookings', icon: CalendarIcon },
     { name: 'Visa Applications', href: '/admin/visa', icon: CalendarIcon },
+    { name: 'Visa Settings', href: '/admin/visa-settings', icon: Cog6ToothIcon },
     { name: 'Reviews', href: '/admin/reviews', icon: StarIcon },
     { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
   ];

@@ -128,89 +128,199 @@ function getVisaCustomerEmailHTML(data: any) {
   <meta charset="UTF-8">
   <title>Visa Invitation Letter</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f5f0eb; padding: 40px; margin: 0; }
-    .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    .header { text-align: center; border-bottom: 2px solid #f2e8d4; padding-bottom: 20px; }
-    .logo { font-size: 24px; font-weight: bold; color: #1E3D47; }
-    .logo span { color: #C0532C; }
-    .badge { background: #72803A; color: white; padding: 4px 16px; border-radius: 20px; font-size: 12px; display: inline-block; margin-top: 8px; }
-    .details { background: #f8f4ec; padding: 20px; border-radius: 12px; margin: 20px 0; }
-    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e8e0d4; }
-    .row:last-child { border-bottom: none; }
-    .footer { text-align: center; padding-top: 20px; border-top: 1px solid #f2e8d4; color: #999; font-size: 14px; }
-    .highlight { color: #1E3D47; font-weight: bold; }
-    .pdf-note { background: #f0f7f4; padding: 16px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #72803A; }
-    .whatsapp-btn { display: inline-block; background: #25D366; color: white; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: 600; }
-    .whatsapp-btn:hover { background: #128C7E; }
+    body { 
+      font-family: Arial, sans-serif; 
+      background: #f5f0eb; 
+      padding: 40px; 
+      margin: 0; 
+    }
+    .container { 
+      max-width: 600px; 
+      margin: 0 auto; 
+      background: white; 
+      border-radius: 16px; 
+      padding: 40px; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+    }
+    .header { 
+      text-align: center; 
+      border-bottom: 2px solid #f2e8d4; 
+      padding-bottom: 20px; 
+      margin-bottom: 24px;
+    }
+    .logo { 
+      font-size: 24px; 
+      font-weight: bold; 
+      color: #1E3D47; 
+    }
+    .logo span { 
+      color: #C0532C; 
+    }
+    .badge { 
+      background: #72803A; 
+      color: white; 
+      padding: 4px 16px; 
+      border-radius: 20px; 
+      font-size: 12px; 
+      display: inline-block; 
+      margin-top: 8px; 
+    }
+    .greeting {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .details { 
+      background: #f8f4ec; 
+      padding: 20px; 
+      border-radius: 12px; 
+      margin: 20px 0; 
+    }
+    .row { 
+      display: flex; 
+      justify-content: space-between; 
+      padding: 10px 0; 
+      border-bottom: 1px solid #e8e0d4; 
+    }
+    .row:last-child { 
+      border-bottom: none; 
+    }
+    .label { 
+      color: #888; 
+      font-size: 14px;
+    }
+    .value { 
+      color: #141414; 
+      font-weight: 600; 
+      font-size: 14px;
+      text-align: right;
+    }
+    .pdf-note { 
+      background: #f0f7f4; 
+      padding: 16px; 
+      border-radius: 12px; 
+      margin: 20px 0; 
+      border-left: 4px solid #72803A; 
+    }
+    .pdf-note p {
+      margin: 0;
+    }
+    .pdf-note .title {
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+    .pdf-note .desc {
+      color: #666;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+    .whatsapp-btn { 
+      display: inline-block; 
+      background: #25D366; 
+      color: white; 
+      padding: 12px 28px; 
+      border-radius: 10px; 
+      text-decoration: none; 
+      font-weight: 600; 
+    }
+    .whatsapp-btn:hover { 
+      background: #128C7E; 
+    }
+    .footer { 
+      text-align: center; 
+      padding-top: 20px; 
+      border-top: 1px solid #f2e8d4; 
+      color: #999; 
+      font-size: 14px; 
+      margin-top: 24px;
+    }
+    .footer a {
+      color: #1E3D47;
+      text-decoration: none;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .mt-20 {
+      margin-top: 20px;
+    }
+    .mb-20 {
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- Header -->
     <div class="header">
       <div class="logo">Djibouti <span>Explorer</span></div>
       <div class="badge">VISA INVITATION LETTER</div>
     </div>
 
-    <h2 style="color: #1E3D47;">${isEn ? 'Your Visa Invitation Letter is Ready!' : 'Votre Lettre d\'Invitation Visa est Prête !'}</h2>
-
-    <p style="color: #333; line-height: 1.6;">
+    <!-- Greeting -->
+    <div class="greeting">
       ${isEn 
         ? `Dear <strong>${data.name}</strong>,` 
         : `Cher/Chère <strong>${data.name}</strong>,`}
-    </p>
+    </div>
 
-    <p style="color: #333; line-height: 1.6;">
+    <p style="color: #333; line-height: 1.6; margin-bottom: 20px;">
       ${isEn 
         ? `Thank you for purchasing your visa invitation letter. Please find your official invitation letter attached to this email.` 
         : `Merci d'avoir acheté votre lettre d'invitation visa. Veuillez trouver votre lettre d'invitation officielle en pièce jointe à cet email.`}
     </p>
 
+    <!-- Details -->
     <div class="details">
+      <!-- ⭐ Fixed spacing: Label : Value -->
       <div class="row">
-        <span>${isEn ? 'Reference' : 'Référence'}</span>
-        <span><strong>${data.reference || 'N/A'}</strong></span>
+        <span class="label">${isEn ? 'Reference' : 'Référence'} :</span>
+        <span class="value">${data.reference || 'N/A'}</span>
       </div>
       <div class="row">
-        <span>${isEn ? 'Full Name' : 'Nom Complet'}</span>
-        <span><strong>${data.fullName}</strong></span>
+        <span class="label">${isEn ? 'Full Name' : 'Nom Complet'} :</span>
+        <span class="value">${data.fullName}</span>
       </div>
       <div class="row">
-        <span>${isEn ? 'Passport Number' : 'Numéro de Passeport'}</span>
-        <span><strong>${data.passportNumber}</strong></span>
+        <span class="label">${isEn ? 'Passport Number' : 'Numéro de Passeport'} :</span>
+        <span class="value">${data.passportNumber}</span>
       </div>
       <div class="row">
-        <span>${isEn ? 'Arrival Date' : "Date d'Arrivée"}</span>
-        <span>${data.arrivalDate}</span>
+        <span class="label">${isEn ? 'Arrival Date' : "Date d'Arrivée"} :</span>
+        <span class="value">${data.arrivalDate}</span>
       </div>
       <div class="row">
-        <span>${isEn ? 'Departure Date' : 'Date de Départ'}</span>
-        <span>${data.departureDate}</span>
+        <span class="label">${isEn ? 'Departure Date' : 'Date de Départ'} :</span>
+        <span class="value">${data.departureDate}</span>
       </div>
     </div>
 
+    <!-- PDF Note -->
     <div class="pdf-note">
-      <p style="margin: 0; color: #333; font-size: 14px;">
-        <strong>📄 ${isEn ? 'PDF Attached' : 'PDF en Pièce Jointe'}</strong>
-      </p>
-      <p style="margin: 4px 0 0 0; color: #666; font-size: 13px;">
+      <p class="title">📄 ${isEn ? 'PDF Attached' : 'PDF en Pièce Jointe'}</p>
+      <p class="desc">
         ${isEn 
           ? 'Your official visa invitation letter is attached to this email. Please print it and present it with your visa application.' 
           : 'Votre lettre d\'invitation visa officielle est jointe à cet email. Veuillez l\'imprimer et la présenter avec votre demande de visa.'}
       </p>
     </div>
 
-    <p style="color: #333; line-height: 1.6;">
+    <p style="color: #333; line-height: 1.6; margin-bottom: 20px;">
       ${isEn 
         ? 'If you have any questions, please contact us on WhatsApp or reply to this email.' 
         : 'Si vous avez des questions, veuillez nous contacter sur WhatsApp ou répondre à cet email.'}
     </p>
 
-    <div style="text-align: center; margin: 24px 0;">
+    <!-- WhatsApp Button -->
+    <div class="text-center" style="margin: 24px 0;">
       <a href="https://wa.me/25377862639" target="_blank" rel="noopener noreferrer" class="whatsapp-btn">
         💬 ${isEn ? 'Chat on WhatsApp' : 'Discuter sur WhatsApp'}
       </a>
     </div>
 
+    <!-- Footer -->
     <div class="footer">
       <p style="margin: 0;">${isEn ? 'Thank you for choosing Djibouti Explorer!' : 'Merci d\'avoir choisi Djibouti Explorer !'}</p>
       <p style="margin: 4px 0 0 0; font-size: 12px;">
@@ -409,18 +519,20 @@ function CheckoutForm({ bookingId, amount, itemName, validLocale, bookingType }:
           });
           customerSubject = `Car Rental Confirmed - ${bookingData?.bookingReference || bookingId}`;
         } else if (bookingType === 'visa') {
-          customerHTML = getVisaCustomerEmailHTML({
-            name: bookingData?.fullName || 'Guest',
-            fullName: bookingData?.fullName || '',
-            passportNumber: bookingData?.passportNumber || '',
-            nationality: bookingData?.nationality || '',
-            arrivalDate: bookingData?.arrivalDate || '',
-            departureDate: bookingData?.departureDate || '',
-            totalPrice: amount,
-            locale: validLocale,
-          });
-          customerSubject = `Visa Request Confirmed - ${bookingId.slice(0, 8)}`;
-        }
+  customerHTML = getVisaCustomerEmailHTML({
+    name: bookingData?.fullName || 'Guest',
+    fullName: bookingData?.fullName || '',
+    passportNumber: bookingData?.passportNumber || '',
+    nationality: bookingData?.nationality || '',
+    arrivalDate: bookingData?.arrivalDate || '',
+    departureDate: bookingData?.departureDate || '',
+    totalPrice: amount,
+    locale: validLocale,
+    // ⭐ ADD THIS LINE:
+    reference: bookingData?.bookingReference || bookingId.slice(0, 8),
+  });
+  customerSubject = `Visa Request Confirmed - ${bookingId.slice(0, 8)}`;
+}
 
         // Send customer email
         if (customerHTML && customerEmail) {
