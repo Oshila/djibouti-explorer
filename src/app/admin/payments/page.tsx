@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase/client';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, deleteDoc, doc } from 'firebase/firestore';
+import toast from 'react-hot-toast';
 import { 
   CreditCardIcon, 
   CheckCircleIcon, 
   XCircleIcon,
   ClockIcon,
   EyeIcon,
-  ArrowTopRightOnSquareIcon
+  ArrowTopRightOnSquareIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 
 interface Payment {
@@ -46,6 +48,23 @@ export default function AdminPaymentsPage() {
       console.error('Error fetching payments:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ⭐ Delete payment function
+  const deletePayment = async (id: string, reference: string) => {
+    if (!confirm(`Delete payment ${reference}? This cannot be undone.`)) return;
+    try {
+      await deleteDoc(doc(db, 'payments', id));
+      toast.success('Payment deleted successfully');
+      fetchPayments();
+    } catch (error: any) {
+      console.error('Error deleting payment:', error);
+      if (error.code === 'permission-denied') {
+        toast.error('Permission denied. You need admin access to delete payments.');
+      } else {
+        toast.error(error.message || 'Failed to delete payment');
+      }
     }
   };
 
@@ -201,6 +220,16 @@ export default function AdminPaymentsPage() {
                         >
                           <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5" />
                           Stripe
+                        </button>
+
+                        {/* ⭐ Delete Button */}
+                        <button
+                          onClick={() => deletePayment(payment.id, payment.paymentIntentId?.slice(0, 8) || payment.id.slice(0, 8))}
+                          className="px-3 py-1.5 bg-terracotta/10 text-terracotta hover:bg-terracotta/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
+                          title="Delete Payment"
+                        >
+                          <TrashIcon className="w-3.5 h-3.5" />
+                          Delete
                         </button>
                       </div>
                     </td>
