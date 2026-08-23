@@ -117,7 +117,7 @@ function getCarAdminEmailHTML(data: any) {
 }
 
 // ============================================
-// VISA EMAIL TEMPLATES
+// VISA EMAIL TEMPLATES (UPDATED)
 // ============================================
 function getVisaCustomerEmailHTML(data: any) {
   const isEn = data.locale === 'en';
@@ -126,39 +126,96 @@ function getVisaCustomerEmailHTML(data: any) {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Visa Invitation Letter Request</title>
+  <title>Visa Invitation Letter</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f5f0eb; padding: 40px; }
-    .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; padding: 40px; }
+    body { font-family: Arial, sans-serif; background: #f5f0eb; padding: 40px; margin: 0; }
+    .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
     .header { text-align: center; border-bottom: 2px solid #f2e8d4; padding-bottom: 20px; }
     .logo { font-size: 24px; font-weight: bold; color: #1E3D47; }
     .logo span { color: #C0532C; }
-    .badge { background: #72803A; color: white; padding: 4px 16px; border-radius: 20px; font-size: 12px; display: inline-block; }
+    .badge { background: #72803A; color: white; padding: 4px 16px; border-radius: 20px; font-size: 12px; display: inline-block; margin-top: 8px; }
     .details { background: #f8f4ec; padding: 20px; border-radius: 12px; margin: 20px 0; }
     .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e8e0d4; }
     .row:last-child { border-bottom: none; }
-    .footer { text-align: center; padding-top: 20px; border-top: 1px solid #f2e8d4; color: #999; }
+    .footer { text-align: center; padding-top: 20px; border-top: 1px solid #f2e8d4; color: #999; font-size: 14px; }
+    .highlight { color: #1E3D47; font-weight: bold; }
+    .pdf-note { background: #f0f7f4; padding: 16px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #72803A; }
+    .whatsapp-btn { display: inline-block; background: #25D366; color: white; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: 600; }
+    .whatsapp-btn:hover { background: #128C7E; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <div class="logo">Djibouti <span>Explorer</span></div>
-      <div class="badge">VISA REQUEST CONFIRMED</div>
+      <div class="badge">VISA INVITATION LETTER</div>
     </div>
-    <h2 style="color: #1E3D47;">${isEn ? 'Visa Invitation Letter Request Received!' : 'Demande de Lettre d\'Invitation Visa Reçue!'}</h2>
-    <p>${isEn ? `Hi ${data.name}, your visa invitation letter request has been received.` : `Bonjour ${data.name}, votre demande de lettre d'invitation visa a été reçue.`}</p>
+
+    <h2 style="color: #1E3D47;">${isEn ? 'Your Visa Invitation Letter is Ready!' : 'Votre Lettre d\'Invitation Visa est Prête !'}</h2>
+
+    <p style="color: #333; line-height: 1.6;">
+      ${isEn 
+        ? `Dear <strong>${data.name}</strong>,` 
+        : `Cher/Chère <strong>${data.name}</strong>,`}
+    </p>
+
+    <p style="color: #333; line-height: 1.6;">
+      ${isEn 
+        ? `Thank you for purchasing your visa invitation letter. Please find your official invitation letter attached to this email.` 
+        : `Merci d'avoir acheté votre lettre d'invitation visa. Veuillez trouver votre lettre d'invitation officielle en pièce jointe à cet email.`}
+    </p>
+
     <div class="details">
-      <div class="row"><span>${isEn ? 'Full Name' : 'Nom Complet'}</span><span><strong>${data.fullName}</strong></span></div>
-      <div class="row"><span>${isEn ? 'Passport Number' : 'Numéro de Passeport'}</span><span><strong>${data.passportNumber}</strong></span></div>
-      <div class="row"><span>${isEn ? 'Nationality' : 'Nationalité'}</span><span>${data.nationality}</span></div>
-      <div class="row"><span>${isEn ? 'Arrival Date' : "Date d'Arrivée"}</span><span>${data.arrivalDate}</span></div>
-      <div class="row"><span>${isEn ? 'Departure Date' : 'Date de Départ'}</span><span>${data.departureDate}</span></div>
-      <div class="row"><span>${isEn ? 'Total Paid' : 'Total Payé'}</span><span><strong>$${data.totalPrice}</strong></span></div>
+      <div class="row">
+        <span>${isEn ? 'Reference' : 'Référence'}</span>
+        <span><strong>${data.reference || 'N/A'}</strong></span>
+      </div>
+      <div class="row">
+        <span>${isEn ? 'Full Name' : 'Nom Complet'}</span>
+        <span><strong>${data.fullName}</strong></span>
+      </div>
+      <div class="row">
+        <span>${isEn ? 'Passport Number' : 'Numéro de Passeport'}</span>
+        <span><strong>${data.passportNumber}</strong></span>
+      </div>
+      <div class="row">
+        <span>${isEn ? 'Arrival Date' : "Date d'Arrivée"}</span>
+        <span>${data.arrivalDate}</span>
+      </div>
+      <div class="row">
+        <span>${isEn ? 'Departure Date' : 'Date de Départ'}</span>
+        <span>${data.departureDate}</span>
+      </div>
     </div>
-    <p style="text-align: center; color: #666;">${isEn ? 'Our team will process your request within 24-48 hours.' : 'Notre équipe traitera votre demande sous 24-48 heures.'}</p>
+
+    <div class="pdf-note">
+      <p style="margin: 0; color: #333; font-size: 14px;">
+        <strong>📄 ${isEn ? 'PDF Attached' : 'PDF en Pièce Jointe'}</strong>
+      </p>
+      <p style="margin: 4px 0 0 0; color: #666; font-size: 13px;">
+        ${isEn 
+          ? 'Your official visa invitation letter is attached to this email. Please print it and present it with your visa application.' 
+          : 'Votre lettre d\'invitation visa officielle est jointe à cet email. Veuillez l\'imprimer et la présenter avec votre demande de visa.'}
+      </p>
+    </div>
+
+    <p style="color: #333; line-height: 1.6;">
+      ${isEn 
+        ? 'If you have any questions, please contact us on WhatsApp or reply to this email.' 
+        : 'Si vous avez des questions, veuillez nous contacter sur WhatsApp ou répondre à cet email.'}
+    </p>
+
+    <div style="text-align: center; margin: 24px 0;">
+      <a href="https://wa.me/25377862639" target="_blank" rel="noopener noreferrer" class="whatsapp-btn">
+        💬 ${isEn ? 'Chat on WhatsApp' : 'Discuter sur WhatsApp'}
+      </a>
+    </div>
+
     <div class="footer">
-      <p><a href="mailto:info@djiboutiexplorer.com">info@djiboutiexplorer.com</a></p>
+      <p style="margin: 0;">${isEn ? 'Thank you for choosing Djibouti Explorer!' : 'Merci d\'avoir choisi Djibouti Explorer !'}</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px;">
+        <a href="mailto:info@djiboutiexplorer.com" style="color: #1E3D47; text-decoration: none;">info@djiboutiexplorer.com</a>
+      </p>
     </div>
   </div>
 </body>
@@ -181,24 +238,34 @@ function getVisaAdminEmailHTML(data: any) {
     .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f2e8d4; }
     .row:last-child { border-bottom: none; }
     .footer { text-align: center; padding-top: 20px; border-top: 1px solid #f2e8d4; color: #999; }
+    .pdf-note { background: #f0f7f4; padding: 12px; border-radius: 8px; margin-top: 12px; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h2 style="color: #1E3D47;">New Visa Request</h2>
+      <h2 style="color: #1E3D47;">🆕 New Visa Invitation Letter Purchased</h2>
       <div class="badge">${data.reference || 'PENDING'}</div>
     </div>
-    <h3>Applicant Details</h3>
+    
+    <h3>👤 Applicant Details</h3>
     <div class="row"><span><strong>Name:</strong></span> <span>${data.fullName}</span></div>
     <div class="row"><span><strong>Email:</strong></span> <span>${data.email}</span></div>
     <div class="row"><span><strong>Phone:</strong></span> <span>${data.phone}</span></div>
-    <h3>Visa Details</h3>
+    
+    <h3>📋 Visa Details</h3>
     <div class="row"><span><strong>Passport:</strong></span> <span>${data.passportNumber}</span></div>
     <div class="row"><span><strong>Nationality:</strong></span> <span>${data.nationality}</span></div>
     <div class="row"><span><strong>Arrival:</strong></span> <span>${data.arrivalDate}</span></div>
     <div class="row"><span><strong>Departure:</strong></span> <span>${data.departureDate}</span></div>
     <div class="row"><span><strong>Total:</strong></span> <span><strong>$${data.totalPrice}</strong></span></div>
+    
+    <div class="pdf-note">
+      <p style="margin: 0; font-size: 13px; color: #333;">
+        📄 PDF invitation letter has been sent to the customer.
+      </p>
+    </div>
+
     <div class="footer">Djibouti Explorer • ${new Date().getFullYear()}</div>
   </div>
 </body>
