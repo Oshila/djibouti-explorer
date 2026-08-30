@@ -242,7 +242,7 @@ export default function TourDetail({ tour, locale }: Props) {
                     {tour.highlights?.[locale]?.length > 0 && (
                       <div>
                         <h3 className="text-lg font-heading text-teal mb-4">
-                          {locale === 'en' ? '✨ Highlights' : '✨ Points Forts'}
+                          {locale === 'en' ? ' Highlights' : ' Points Forts'}
                         </h3>
                         <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {tour.highlights[locale].map((highlight: string, index: number) => (

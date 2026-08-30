@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-// ⭐ Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
@@ -10,6 +9,7 @@ export async function POST(request: NextRequest) {
 
     console.log('📧 Sending email to:', to);
     console.log('📧 Subject:', subject);
+    console.log('📧 HTML length:', html?.length || 0);
 
     if (!to || !subject || !html) {
       return NextResponse.json(
@@ -18,12 +18,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ⭐ Send email via Resend
+    // ⭐ Send email with proper HTML content type
     const { data, error } = await resend.emails.send({
       from: 'Djibouti Explorer <info@djiboutiexplorer.com>',
       to: [to],
       subject: subject,
-      html: html,
+      html: html, // ⭐ This should be HTML, not plain text
     });
 
     if (error) {

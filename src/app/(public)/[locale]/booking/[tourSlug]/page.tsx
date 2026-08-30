@@ -16,8 +16,10 @@ import {
   ArrowRightIcon,
   ArrowLeftIcon,
   MapPinIcon,
-  ClockIcon
+  ClockIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
+import { SparklesIcon as SparklesSolid } from '@heroicons/react/24/solid';
 
 interface Props {
   params: Promise<{
@@ -124,7 +126,16 @@ export default function BookingPage({ params }: Props) {
   }
 
   const totalGuests = formData.adults + formData.children + formData.infants;
-  const totalAmount = tour?.price * totalGuests;
+  
+  // ⭐ DISCOUNT LOGIC
+  const GROUP_DISCOUNT_THRESHOLD = 4;
+  const GROUP_DISCOUNT_PERCENTAGE = 15;
+  const isEligibleForDiscount = totalGuests >= GROUP_DISCOUNT_THRESHOLD;
+  
+  const pricePerPerson = tour?.price || 0;
+  const subtotal = pricePerPerson * totalGuests;
+  const discountAmount = isEligibleForDiscount ? (subtotal * GROUP_DISCOUNT_PERCENTAGE / 100) : 0;
+  const totalAmount = subtotal - discountAmount;
 
   const steps = [
     { id: 1, label: validLocale === 'en' ? 'Date & Guests' : 'Date & Voyageurs', icon: CalendarIcon },
@@ -157,6 +168,12 @@ export default function BookingPage({ params }: Props) {
       guests: 'guests',
       flex: 'Flexible',
       paymentNote: 'You will be redirected to Stripe to complete your payment securely.',
+      groupDiscount: 'Group Discount! ',
+      groupDiscountDesc: '15% off for groups of 4 or more!',
+      subtotal: 'Subtotal',
+      discount: 'Group Discount (15%)',
+      savings: 'You save',
+      discountApplied: ' 15% Group Discount Applied!',
     },
     fr: {
       title: 'Réservez Votre Aventure',
@@ -182,66 +199,78 @@ export default function BookingPage({ params }: Props) {
       guests: 'voyageurs',
       flex: 'Flexible',
       paymentNote: 'Vous serez redirigé vers Stripe pour compléter votre paiement en toute sécurité.',
+      groupDiscount: 'Réduction de Groupe ! 🎉',
+      groupDiscountDesc: '15% de réduction pour les groupes de 4 personnes ou plus !',
+      subtotal: 'Sous-total',
+      discount: 'Réduction Groupe (15%)',
+      savings: 'Vous économisez',
+      discountApplied: ' 15% de Réduction Groupe Appliquée !',
     },
   };
 
   const t = content[validLocale]!;
 
- const handleSubmit = async () => {
-  setSubmitting(true);
-  try {
-    console.log('📝 Creating booking with data:', {
-      tourId: tour.id,
-      tourName: tour.title[validLocale],
-      totalAmount: totalAmount,
-    });
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      console.log(' Creating booking with data:', {
+        tourId: tour.id,
+        tourName: tour.title[validLocale],
+        totalAmount: totalAmount,
+        discountAmount: discountAmount,
+        isGroupDiscount: isEligibleForDiscount,
+      });
 
-    const bookingRef = await addDoc(collection(db, 'bookings'), {
-      tourId: tour.id,
-      tourName: tour.title[validLocale],
-      tourSlug: tourSlug,
-      date: formData.date || null,
-      travellers: {
-        adults: formData.adults,
-        children: formData.children,
-        infants: formData.infants,
-      },
-      customer: {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-      },
-      specialRequests: formData.specialRequests || '',
-      totalAmount: totalAmount,
-      currency: 'USD',
-      paymentStatus: 'pending',
-      bookingStatus: 'pending',
-      createdAt: serverTimestamp(),
-    });
+      const bookingRef = await addDoc(collection(db, 'bookings'), {
+        tourId: tour.id,
+        tourName: tour.title[validLocale],
+        tourSlug: tourSlug,
+        date: formData.date || null,
+        travellers: {
+          adults: formData.adults,
+          children: formData.children,
+          infants: formData.infants,
+        },
+        customer: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+        },
+        specialRequests: formData.specialRequests || '',
+        totalAmount: totalAmount,
+        subtotal: subtotal,
+        discountAmount: discountAmount,
+        discountPercentage: isEligibleForDiscount ? GROUP_DISCOUNT_PERCENTAGE : 0,
+        isGroupDiscount: isEligibleForDiscount,
+        currency: 'USD',
+        paymentStatus: 'pending',
+        bookingStatus: 'pending',
+        createdAt: serverTimestamp(),
+      });
 
-    console.log('✅ Booking created with ID:', bookingRef.id);
+      console.log(' Booking created with ID:', bookingRef.id);
 
-    const reference = `BK-${Date.now().toString().slice(-8)}`;
-    await updateDoc(doc(db, 'bookings', bookingRef.id), {
-      bookingReference: reference,
-    });
+      const reference = `BK-${Date.now().toString().slice(-8)}`;
+      await updateDoc(doc(db, 'bookings', bookingRef.id), {
+        bookingReference: reference,
+      });
 
-    console.log('📋 Booking reference:', reference);
-    console.log('🔗 Redirecting to checkout with ID:', bookingRef.id);
+      console.log(' Booking reference:', reference);
+      console.log(' Redirecting to checkout with ID:', bookingRef.id);
 
-    const checkoutUrl = `/${validLocale}/checkout?type=tour&id=${bookingRef.id}&name=${encodeURIComponent(tour.title[validLocale])}&price=${totalAmount}`;
-    
-    toast.success('Booking created! Redirecting to payment...');
-    router.push(checkoutUrl);
+      const checkoutUrl = `/${validLocale}/checkout?type=tour&id=${bookingRef.id}&name=${encodeURIComponent(tour.title[validLocale])}&price=${totalAmount}&fullPrice=${subtotal}&discount=${discountAmount}`;
+      
+      toast.success('Booking created! Redirecting to payment...');
+      router.push(checkoutUrl);
 
-  } catch (error) {
-    console.error('❌ Error creating booking:', error);
-    toast.error('Something went wrong. Please try again.');
-  } finally {
-    setSubmitting(false);
-  }
-};
+    } catch (error) {
+      console.error(' Error creating booking:', error);
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream via-white to-cream/50 py-8 md:py-12">
@@ -349,6 +378,7 @@ export default function BookingPage({ params }: Props) {
                       {validLocale === 'en' ? 'Number of Travelers' : 'Nombre de Voyageurs'}
                     </label>
                     <div className="grid grid-cols-3 gap-4">
+                      {/* Adults */}
                       <div className="bg-cream/30 rounded-xl p-4 text-center border border-cream hover:border-teal/30 transition-colors">
                         <div className="text-sm font-medium text-nearblack/70">{t.adults}</div>
                         <div className="flex items-center justify-center gap-3 mt-2">
@@ -367,6 +397,7 @@ export default function BookingPage({ params }: Props) {
                           </button>
                         </div>
                       </div>
+                      {/* Children */}
                       <div className="bg-cream/30 rounded-xl p-4 text-center border border-cream hover:border-teal/30 transition-colors">
                         <div className="text-sm font-medium text-nearblack/70">{t.children}</div>
                         <div className="flex items-center justify-center gap-3 mt-2">
@@ -385,6 +416,7 @@ export default function BookingPage({ params }: Props) {
                           </button>
                         </div>
                       </div>
+                      {/* Infants */}
                       <div className="bg-cream/30 rounded-xl p-4 text-center border border-cream hover:border-teal/30 transition-colors">
                         <div className="text-sm font-medium text-nearblack/70">{t.infants}</div>
                         <div className="flex items-center justify-center gap-3 mt-2">
@@ -404,8 +436,33 @@ export default function BookingPage({ params }: Props) {
                         </div>
                       </div>
                     </div>
+                    
+                    {/* ⭐ Group Discount Badge */}
+                    {isEligibleForDiscount && (
+                      <div className="mt-4 bg-gradient-to-r from-ochre/10 to-terracotta/10 border-2 border-ochre/30 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
+                        <div className="w-10 h-10 bg-ochre/20 rounded-full flex items-center justify-center flex-shrink-0">
+                          <SparklesSolid className="w-5 h-5 text-ochre" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-ochre text-sm flex items-center gap-1">
+                             {t.discountApplied}
+                          </p>
+                          <p className="text-xs text-nearblack/60">
+                            {validLocale === 'en' 
+                              ? `You're saving 15% on this booking!` 
+                              : `Vous économisez 15% sur cette réservation !`}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="text-right text-sm text-nearblack/50 mt-3">
-                      {totalGuests} {t.guests} • <span className="font-medium text-teal">${totalAmount}</span> {t.total}
+                      {totalGuests} {t.guests}
+                      {isEligibleForDiscount && (
+                        <span className="text-olive font-medium ml-2">
+                           {GROUP_DISCOUNT_PERCENTAGE}% off!
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -501,8 +558,12 @@ export default function BookingPage({ params }: Props) {
                   </button>
                   <button
                     onClick={() => setCurrentStep(3)}
-                    className="flex-1 bg-gradient-to-r from-teal to-teal/80 hover:from-teal/90 hover:to-teal/70 text-white px-8 py-3.5 rounded-xl font-medium transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
                     disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone}
+                    className={`flex-1 px-8 py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
+                      formData.firstName && formData.lastName && formData.email && formData.phone
+                        ? 'bg-gradient-to-r from-teal to-teal/80 hover:from-teal/90 hover:to-teal/70 text-white hover:shadow-lg hover:scale-[1.02] active:scale-95'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    }`}
                   >
                     {t.next} <ArrowRightIcon className="w-5 h-5" />
                   </button>
@@ -525,12 +586,39 @@ export default function BookingPage({ params }: Props) {
                         <div className="text-nearblack/50">{t.guests}</div>
                         <div className="font-medium text-teal">{totalGuests}</div>
                       </div>
-                      <div className="col-span-2">
-                        <div className="text-nearblack/50">{t.total}</div>
-                        <div className="font-bold text-2xl text-teal">${totalAmount}</div>
+                    </div>
+                    
+                    {/* ⭐ Pricing Breakdown with Discount */}
+                    <div className="mt-4 pt-4 border-t border-cream space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-nearblack/60">{t.subtotal} ({totalGuests} × ${pricePerPerson})</span>
+                        <span className="text-nearblack">${subtotal.toFixed(2)}</span>
                       </div>
+                      
+                      {isEligibleForDiscount && (
+                        <div className="flex justify-between text-sm text-olive font-medium">
+                          <span className="flex items-center gap-1">
+                            <  SparklesIcon
+ className="w-4 h-4" />
+                            {t.discount}
+                          </span>
+                          <span>-${discountAmount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between text-lg font-bold pt-2 border-t border-cream">
+                        <span className="text-teal">{t.total}</span>
+                        <span className="text-teal">${totalAmount.toFixed(2)}</span>
+                      </div>
+                      
+                      {isEligibleForDiscount && (
+                        <div className="text-xs text-olive font-medium text-right">
+                           {t.savings} ${discountAmount.toFixed(2)}!
+                        </div>
+                      )}
                     </div>
                   </div>
+                  
                   <div className="bg-cream/30 rounded-2xl p-5 border border-cream">
                     <p className="font-medium text-teal">{formData.firstName} {formData.lastName}</p>
                     <p className="text-sm text-nearblack/60">{formData.email}</p>
@@ -550,8 +638,8 @@ export default function BookingPage({ params }: Props) {
                         <p className="text-sm font-medium text-teal">{t.paymentNote}</p>
                         <p className="text-xs text-nearblack/50 mt-1">
                           {validLocale === 'en' 
-                            ? `You will pay the full amount of $${totalAmount} now.` 
-                            : `Vous paierez le montant total de $${totalAmount} maintenant.`}
+                            ? `You will pay the full amount of $${totalAmount.toFixed(2)} now.` 
+                            : `Vous paierez le montant total de $${totalAmount.toFixed(2)} maintenant.`}
                         </p>
                       </div>
                     </div>
@@ -599,6 +687,12 @@ export default function BookingPage({ params }: Props) {
             <CheckCircleIcon className="w-4 h-4 text-olive" />
             {validLocale === 'en' ? 'Best Price Guarantee' : 'Meilleur Prix Garanti'}
           </span>
+          {isEligibleForDiscount && (
+            <span className="flex items-center gap-1.5 text-ochre font-medium">
+              <SparklesSolid className="w-4 h-4" />
+              {validLocale === 'en' ? `15% Group Discount Applied!` : `15% de Réduction Groupe Appliquée!`}
+            </span>
+          )}
           <span className="flex items-center gap-1.5">
             <CheckCircleIcon className="w-4 h-4 text-olive" />
             {validLocale === 'en' ? 'Stripe Secure Payment' : 'Paiement Sécurisé Stripe'}
