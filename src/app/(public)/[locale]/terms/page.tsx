@@ -6,7 +6,7 @@ interface Props {
 }
 
 export default async function TermsPage({ params }: Props) {
-  // ⭐ Await the params
+  //  Await the params
   const { locale } = await params;
   const isEn = locale === 'en';
 

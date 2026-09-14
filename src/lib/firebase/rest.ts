@@ -124,7 +124,7 @@ export async function fetchToursFromFirebase() {
     
     return tours;
   } catch (error) {
-    console.error('❌ Firebase REST API error:', error);
+    console.error(' Firebase REST API error:', error);
     return [];
   }
 }

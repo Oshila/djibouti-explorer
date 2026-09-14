@@ -50,7 +50,7 @@ interface Props {
 
 export default function EditCarPage({ params }: Props) {
   const router = useRouter();
-  // ⭐ Unwrap params with React.use()
+  //  Unwrap params with React.use()
   const { id } = use(params);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -454,7 +454,7 @@ export default function EditCarPage({ params }: Props) {
                   onChange={(e) => setCar({ ...car, featured: e.target.checked })}
                   className="w-4 h-4 rounded border-cream text-teal focus:ring-teal"
                 />
-                <span className="text-sm font-medium text-nearblack/70">⭐ Featured</span>
+                <span className="text-sm font-medium text-nearblack/70"> Featured</span>
               </label>
             </div>
           </div>

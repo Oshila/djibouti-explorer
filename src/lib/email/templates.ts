@@ -239,7 +239,7 @@ export function getCustomerEmailHTML(data: {
       <!-- Header -->
       <div class="header">
         <div class="logo">Djibouti <span>Explorer</span></div>
-        <div class="badge">CONFIRMED ✅</div>
+        <div class="badge">CONFIRMED </div>
       </div>
 
       <!-- Reference -->

@@ -225,7 +225,7 @@ export default function AdminCars() {
                       </span>
                       {car.featured && (
                         <span className="text-xs px-3 py-1 rounded-full font-medium bg-ochre/10 text-ochre">
-                          ⭐ Featured
+                           Featured
                         </span>
                       )}
                     </div>

@@ -120,9 +120,9 @@ export async function POST() {
           updatedAt: new Date().toISOString(),
         });
         updatedCount++;
-        console.log(`✅ Updated: ${slug}`);
+        console.log(` Updated: ${slug}`);
       } else {
-        console.log(`⚠️ No mapping for: ${slug}`);
+        console.log(` No mapping for: ${slug}`);
       }
     }
 

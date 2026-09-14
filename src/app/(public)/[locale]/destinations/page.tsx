@@ -31,7 +31,7 @@ interface Destination {
   color: string;
   image: string;
   description: { en: string; fr: string };
-  tourCount: number; // ⭐ Dynamic, will be calculated
+  tourCount: number; //  Dynamic, will be calculated
 }
 
 // Base destinations without tour counts

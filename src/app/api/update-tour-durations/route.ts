@@ -69,9 +69,9 @@ export async function POST() {
           updatedAt: new Date().toISOString(),
         });
         updatedCount++;
-        console.log(`✅ Updated: ${slug} → ${duration} Days / ${nights} Nights`);
+        console.log(` Updated: ${slug} → ${duration} Days / ${nights} Nights`);
       } else {
-        console.log(`⚠️ No duration mapping for: ${slug}`);
+        console.log(` No duration mapping for: ${slug}`);
       }
     }
 

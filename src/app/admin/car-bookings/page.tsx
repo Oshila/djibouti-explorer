@@ -132,7 +132,7 @@ export default function AdminCarBookings() {
 
   const getPaymentBadge = (status: string) => {
     if (status === 'paid') {
-      return <span className="text-xs px-2 py-0.5 rounded-full bg-olive/10 text-olive">✅ Paid</span>;
+      return <span className="text-xs px-2 py-0.5 rounded-full bg-olive/10 text-olive"> Paid</span>;
     }
     return <span className="text-xs px-2 py-0.5 rounded-full bg-ochre/10 text-ochre">⏳ Pending</span>;
   };

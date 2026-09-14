@@ -247,7 +247,7 @@ export async function POST() {
       await adminDb.collection('tours').add(tour);
       return NextResponse.json({
         success: true,
-        message: '✅ Allols Discovery Tour added with exact itinerary!',
+        message: ' Allols Discovery Tour added with exact itinerary!',
       });
     } else {
       const doc = existing.docs[0];
@@ -256,7 +256,7 @@ export async function POST() {
       }
       return NextResponse.json({
         success: true,
-        message: '✅ Allols Discovery Tour updated with exact itinerary!',
+        message: ' Allols Discovery Tour updated with exact itinerary!',
       });
     }
   } catch (error: any) {

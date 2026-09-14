@@ -62,7 +62,7 @@ export default function VisaPage() {
   });
   const [loadingSettings, setLoadingSettings] = useState(true);
 
-  // ⭐ Fetch visa settings from Firestore
+  //  Fetch visa settings from Firestore
   useEffect(() => {
     async function fetchSettings() {
       try {

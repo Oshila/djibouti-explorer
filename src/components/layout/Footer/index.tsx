@@ -10,7 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 
-// ⭐ Clear Payment Icons
+//  Clear Payment Icons
 const VisaIcon = () => (
   <svg className="w-10 h-7" viewBox="0 0 48 30" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="48" height="30" rx="4" fill="#1434CB" />

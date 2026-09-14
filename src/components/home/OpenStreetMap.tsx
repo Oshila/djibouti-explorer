@@ -328,7 +328,7 @@ export function OpenStreetMap({ locale }: Props) {
               transform: rotate(45deg);
               color: white;
               font-size: 16px;
-            ">📍</span>
+            "></span>
           </div>
         `,
         iconSize: [36, 36],
@@ -463,7 +463,7 @@ export function OpenStreetMap({ locale }: Props) {
                 href={`/${locale}/destinations/${dest.slug[locale]}`}
                 className="inline-flex items-center gap-1.5 bg-cream hover:bg-teal/10 text-nearblack hover:text-teal transition-colors px-3 py-1.5 rounded-full text-xs sm:text-sm"
               >
-                <span>📍</span>
+                <span></span>
                 {dest.name[locale]}
                 <span className="text-xs text-nearblack/40">({dest.tourCount})</span>
               </a>

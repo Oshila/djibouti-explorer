@@ -17,7 +17,7 @@ interface Destination {
   tourCount: number;
 }
 
-// ⭐ FALLBACK DESTINATIONS (used if Firestore is empty)
+//  FALLBACK DESTINATIONS (used if Firestore is empty)
 const fallbackDestinations: Omit<Destination, 'tourCount'>[] = [
   {
     id: 'lake-assal',
@@ -170,7 +170,7 @@ export function DestinationsGrid({ locale }: Props) {
           setDestinations(destinationsWithCounts);
           setUsingFallback(false);
         } else {
-          // ⭐ Firestore is empty - use fallback data
+          //  Firestore is empty - use fallback data
           console.log('No destinations in Firestore, using fallback data');
           
           // Count tours from fallback (if any tours exist)
@@ -203,7 +203,7 @@ export function DestinationsGrid({ locale }: Props) {
         }
       } catch (error) {
         console.error('Error fetching destinations:', error);
-        // ⭐ On error, use fallback data
+        //  On error, use fallback data
         const fallbackWithCounts = fallbackDestinations.map((dest) => ({
           ...dest,
           tourCount: 0,

@@ -29,7 +29,7 @@ export async function POST() {
 
     return NextResponse.json({
       success: true,
-      message: '✅ Updated Dittilou tour destinations!',
+      message: ' Updated Dittilou tour destinations!',
     });
   } catch (error: any) {
     console.error('Error:', error);

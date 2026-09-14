@@ -18,27 +18,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ⭐ Send email with proper HTML content type
+    //  Send email with proper HTML content type
     const { data, error } = await resend.emails.send({
       from: 'Djibouti Explorer <info@djiboutiexplorer.com>',
       to: [to],
       subject: subject,
-      html: html, // ⭐ This should be HTML, not plain text
+      html: html, //  This should be HTML, not plain text
     });
 
     if (error) {
-      console.error('❌ Resend error:', error);
+      console.error(' Resend error:', error);
       return NextResponse.json(
         { error: error.message },
         { status: 500 }
       );
     }
 
-    console.log('✅ Email sent successfully:', data);
+    console.log(' Email sent successfully:', data);
     return NextResponse.json({ success: true, data });
 
   } catch (error: any) {
-    console.error('❌ Error sending email:', error);
+    console.error(' Error sending email:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to send email' },
       { status: 500 }

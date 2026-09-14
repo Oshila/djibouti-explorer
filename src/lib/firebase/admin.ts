@@ -19,9 +19,9 @@ if (!getApps().length) {
         privateKey: privateKey,
       }),
     });
-    console.log('✅ Firebase Admin initialized successfully');
+    console.log(' Firebase Admin initialized successfully');
   } catch (error) {
-    console.error('❌ Failed to initialize Firebase Admin:', error);
+    console.error(' Failed to initialize Firebase Admin:', error);
   }
 }
 

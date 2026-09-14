@@ -317,7 +317,7 @@ export async function POST() {
       await adminDb.collection('tours').add(tour);
       return NextResponse.json({
         success: true,
-        message: '✅ Sea, Mountain & Hiking Grand Tour added successfully!',
+        message: ' Sea, Mountain & Hiking Grand Tour added successfully!',
       });
     }
 
@@ -326,7 +326,7 @@ export async function POST() {
 
     return NextResponse.json({
       success: true,
-      message: '✅ Sea, Mountain & Hiking Grand Tour updated with exact itinerary!',
+      message: ' Sea, Mountain & Hiking Grand Tour updated with exact itinerary!',
     });
   } catch (error: any) {
     console.error('Error:', error);

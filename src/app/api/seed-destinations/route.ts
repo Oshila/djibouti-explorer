@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 
-// ⭐ All your destinations
+//  All your destinations
 const destinations = [
   {
     id: 'lake-assal',
@@ -181,7 +181,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: `✅ Successfully seeded ${count} destinations to Firestore!`,
+      message: ` Successfully seeded ${count} destinations to Firestore!`,
       seeded: count
     });
 

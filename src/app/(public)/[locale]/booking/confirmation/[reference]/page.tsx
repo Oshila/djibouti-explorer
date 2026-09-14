@@ -59,9 +59,9 @@ export default function ConfirmationPage({ params }: Props) {
         console.log('📋 Reference:', reference);
         console.log('🌐 Locale:', validLocale);
         
-        // ⭐ Check if reference is valid
+        //  Check if reference is valid
         if (!reference) {
-          console.error('❌ No reference provided');
+          console.error(' No reference provided');
           setError('No booking reference provided');
           setLoading(false);
           return;
@@ -75,26 +75,26 @@ export default function ConfirmationPage({ params }: Props) {
         console.log('📄 Document exists?', docSnap.exists());
         
         if (!docSnap.exists()) {
-          console.log('❌ Booking not found in Firestore');
+          console.log(' Booking not found in Firestore');
           setError('Booking not found');
           setLoading(false);
           return;
         }
         
         const data = docSnap.data();
-        console.log('✅ Booking data:', data);
+        console.log(' Booking data:', data);
         
         const bookingData = { id: docSnap.id, ...data } as BookingData;
         setBooking(bookingData);
         
-        // ⭐ Fetch tour if tourId exists
+        //  Fetch tour if tourId exists
         if (bookingData.tourId) {
           console.log('🔍 Fetching tour:', bookingData.tourId);
           const tourRef = doc(db, 'tours', bookingData.tourId);
           const tourSnap = await getDoc(tourRef);
           if (tourSnap.exists()) {
             const tourData = tourSnap.data();
-            console.log('✅ Tour found:', tourData);
+            console.log(' Tour found:', tourData);
             setTour({
               id: tourSnap.id,
               title: tourData.title || { en: 'Tour', fr: 'Circuit' },
@@ -105,11 +105,11 @@ export default function ConfirmationPage({ params }: Props) {
               maxGroupSize: tourData.maxGroupSize || 8,
             });
           } else {
-            console.log('⚠️ Tour not found:', bookingData.tourId);
+            console.log(' Tour not found:', bookingData.tourId);
           }
         }
       } catch (error: any) {
-        console.error('❌ Error fetching booking:', error);
+        console.error(' Error fetching booking:', error);
         setError(error.message || 'Failed to load booking');
       } finally {
         setLoading(false);
@@ -119,7 +119,7 @@ export default function ConfirmationPage({ params }: Props) {
     fetchData();
   }, [reference, validLocale]);
 
-  // ⭐ Show loading state
+  //  Show loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
@@ -131,7 +131,7 @@ export default function ConfirmationPage({ params }: Props) {
     );
   }
 
-  // ⭐ Show error state
+  //  Show error state
   if (error || !booking) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center py-12">

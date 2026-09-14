@@ -354,7 +354,7 @@ export default function CarsPage({ params }: Props) {
         )}
         {car.featured && (
           <span className="absolute top-3 left-3 bg-ochre text-nearblack text-xs font-medium px-3 py-1 rounded-full">
-            ⭐ {t.featured}
+             {t.featured}
           </span>
         )}
         {car.rating && (

@@ -10,7 +10,7 @@ interface Props {
   };
 }
 
-// ⭐ Convert Firestore Timestamps to plain objects
+//  Convert Firestore Timestamps to plain objects
 function convertTimestamps(obj: any): any {
   if (obj === null || obj === undefined) return obj;
   
@@ -50,7 +50,7 @@ async function getTourBySlug(slug: string, locale: Locale) {
       const doc = snapshot.docs[0];
       if (doc) {
         const data = doc.data();
-        // ⭐ Convert timestamps and return plain object
+        //  Convert timestamps and return plain object
         return { 
           id: doc.id, 
           ...convertTimestamps(data) 
@@ -70,7 +70,7 @@ async function getTourBySlug(slug: string, locale: Locale) {
       const doc = snapshotFr.docs[0];
       if (doc) {
         const data = doc.data();
-        // ⭐ Convert timestamps and return plain object
+        //  Convert timestamps and return plain object
         return { 
           id: doc.id, 
           ...convertTimestamps(data) 

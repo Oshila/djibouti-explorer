@@ -51,7 +51,7 @@ export default function AdminPaymentsPage() {
     }
   };
 
-  // ⭐ Delete payment function
+  //  Delete payment function
   const deletePayment = async (id: string, reference: string) => {
     if (!confirm(`Delete payment ${reference}? This cannot be undone.`)) return;
     try {
@@ -222,7 +222,7 @@ export default function AdminPaymentsPage() {
                           Stripe
                         </button>
 
-                        {/* ⭐ Delete Button */}
+                        {/*  Delete Button */}
                         <button
                           onClick={() => deletePayment(payment.id, payment.paymentIntentId?.slice(0, 8) || payment.id.slice(0, 8))}
                           className="px-3 py-1.5 bg-terracotta/10 text-terracotta hover:bg-terracotta/20 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"

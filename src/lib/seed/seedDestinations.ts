@@ -1,7 +1,7 @@
 import { db } from '@/lib/firebase/client';
 import { collection, doc, setDoc, getDocs, query, limit } from 'firebase/firestore';
 
-// ⭐ All destinations with their data
+//  All destinations with their data
 const destinationsData = [
   {
     id: 'lake-assal',
@@ -172,7 +172,7 @@ export async function seedDestinations() {
     const snapshot = await getDocs(destQuery);
     
     if (!snapshot.empty) {
-      console.log('✅ Destinations already exist in Firestore. Skipping seed.');
+      console.log(' Destinations already exist in Firestore. Skipping seed.');
       return { success: true, message: 'Destinations already exist', seeded: 0 };
     }
 
@@ -184,14 +184,14 @@ export async function seedDestinations() {
       const docRef = doc(db, 'destinations', dest.id);
       await setDoc(docRef, dest);
       count++;
-      console.log(`✅ Added: ${dest.name.en}`);
+      console.log(` Added: ${dest.name.en}`);
     }
     
     console.log(`🎉 Successfully seeded ${count} destinations!`);
     return { success: true, message: `Seeded ${count} destinations`, seeded: count };
     
   } catch (error) {
-    console.error('❌ Error seeding destinations:', error);
+    console.error(' Error seeding destinations:', error);
     return { success: false, message: 'Error seeding destinations', error };
   }
 }

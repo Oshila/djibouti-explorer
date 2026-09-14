@@ -6,7 +6,7 @@ interface Props {
 }
 
 export default async function PrivacyPage({ params }: Props) {
-  // ⭐ Await the params
+  //  Await the params
   const { locale } = await params;
   const isEn = locale === 'en';
 

@@ -102,7 +102,7 @@ export default function AdminBookings() {
     }
   };
 
-  // ⭐ FIXED: Delete with proper error handling
+  //  FIXED: Delete with proper error handling
   const deleteBooking = async (id: string, reference: string) => {
     if (!confirm(`Delete booking ${reference}? This cannot be undone.`)) return;
     try {

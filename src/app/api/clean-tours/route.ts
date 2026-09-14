@@ -21,7 +21,7 @@ export async function POST() {
 
       if (KEEP_TOURS.includes(slug)) {
         kept++;
-        console.log(`✅ Keeping: ${slug}`);
+        console.log(` Keeping: ${slug}`);
       } else {
         await adminDb.collection('tours').doc(doc.id).delete();
         deleted++;

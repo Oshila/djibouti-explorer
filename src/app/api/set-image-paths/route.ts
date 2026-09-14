@@ -111,13 +111,13 @@ export async function POST() {
           updatedAt: new Date().toISOString(),
         });
         updatedCount++;
-        console.log(`✅ Updated: ${slug}`);
+        console.log(` Updated: ${slug}`);
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: `✅ Updated ${updatedCount} tours with existing image paths!`,
+      message: ` Updated ${updatedCount} tours with existing image paths!`,
       updatedCount,
     });
   } catch (error: any) {

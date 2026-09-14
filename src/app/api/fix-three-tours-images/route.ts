@@ -50,7 +50,7 @@ export async function POST() {
           updatedAt: new Date().toISOString(),
         });
         updatedCount++;
-        console.log(`✅ Updated: ${slug} with new images`);
+        console.log(` Updated: ${slug} with new images`);
       }
     }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';  // ⭐ Import 'use' directly
+import { useState, useEffect, use } from 'react';  //  Import 'use' directly
 import { Locale } from '@/types';
 import { db } from '@/lib/firebase/client';
 import { collection, getDocs } from 'firebase/firestore';
@@ -57,7 +57,7 @@ interface Tour {
 }
 
 export default function HomePage({ params }: Props) {
-  // ⭐ Use the imported 'use' function
+  //  Use the imported 'use' function
   const { locale } = use(params);
   const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
   

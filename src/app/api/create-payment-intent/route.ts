@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     const amountInCents = Math.round(amount * 100);
 
-    // ⭐ Create payment intent with automatic payment methods
+    //  Create payment intent with automatic payment methods
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
       currency: currency.toLowerCase(),

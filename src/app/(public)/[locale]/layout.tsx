@@ -2,7 +2,7 @@ import { Locale } from '@/types';
 
 interface Props {
   children: React.ReactNode;
-  params: Promise<{ locale: string }>;  // ⭐ Use string instead of Locale
+  params: Promise<{ locale: string }>;  //  Use string instead of Locale
 }
 
 export default async function LocaleLayout({ children, params }: Props) {

@@ -348,7 +348,7 @@ export function GoogleMap({ locale, destinations = defaultDestinations }: Props)
                 <img src={dest.image} alt="" className="w-6 h-6 rounded-full object-cover" />
               ) : (
                 <div className="w-6 h-6 rounded-full bg-teal/10 flex items-center justify-center text-xs">
-                  📍
+                  
                 </div>
               )}
               <span className="text-nearblack/80 hover:text-teal transition-colors">

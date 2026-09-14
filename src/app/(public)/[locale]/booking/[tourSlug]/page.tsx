@@ -7,20 +7,73 @@ import { Locale } from '@/types';
 import { db } from '@/lib/firebase/client';
 import { collection, query, where, getDocs, limit, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
-import { 
-  CalendarIcon, 
-  UserGroupIcon, 
-  UserIcon, 
+import {
+  CalendarIcon,
+  UserGroupIcon,
+  UserIcon,
   CreditCardIcon,
   CheckCircleIcon,
   ArrowRightIcon,
   ArrowLeftIcon,
   MapPinIcon,
   ClockIcon,
-  SparklesIcon
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { SparklesIcon as SparklesSolid } from '@heroicons/react/24/solid';
 
+// ────────────────────────────────────────────────
+// STRICTER inline validators
+// ────────────────────────────────────────────────
+
+// Real, common email providers (extend as needed)
+const VALID_EMAIL_DOMAINS = [
+  'gmail.com', 'googlemail.com',
+  'yahoo.com', 'yahoo.fr', 'yahoo.co.uk',
+  'hotmail.com', 'hotmail.fr', 'outlook.com', 'outlook.fr',
+  'live.com', 'live.fr',
+  'icloud.com', 'me.com', 'mac.com',
+  'protonmail.com', 'proton.me',
+  'aol.com', 'gmx.com', 'gmx.fr',
+  'mail.com', 'zoho.com', 'yandex.com',
+  'orange.fr', 'wanadoo.fr', 'free.fr', 'sfr.fr', 'laposte.net',
+];
+
+const isValidEmail = (email: string) => {
+  const trimmed = email.trim().toLowerCase();
+  // Basic format check
+  if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(trimmed)) return false;
+  // Block obvious junk
+  if (trimmed.includes('..')) return false;
+  if (trimmed.startsWith('.') || trimmed.endsWith('.')) return false;
+  if (/@\.|\.@/.test(trimmed)) return false;
+
+  // Domain must be in our allow-list (catches gmai.com, gmial.com, etc.)
+  const domain = trimmed.split('@')[1] ?? '';
+  return VALID_EMAIL_DOMAINS.includes(domain);
+};
+
+const isValidPhone = (phone: string) => {
+  const cleaned = phone.replace(/[\s\-().]/g, '');
+  // Must start with + or 00 (international), OR be a local number of 8 digits
+  if (!/^(\+|00)\d{8,15}$/.test(cleaned) && !/^\d{8}$/.test(cleaned)) return false;
+
+  // Reject obvious fake patterns like 123456789, 000000000, 111111111
+  const digitsOnly = cleaned.replace(/^(\+|00)/, '');
+  if (/^(\d)\1+$/.test(digitsOnly)) return false; // all same digit
+  if (/^(0123456789|123456789|9876543210)/.test(digitsOnly)) return false; // sequences
+
+  return true;
+};
+
+const isValidName = (name: string) => {
+  const trimmed = name.trim();
+  if (trimmed.length < 2) return false;
+  if (!/^[a-zA-ZÀ-ÿ' -]+$/.test(trimmed)) return false;
+  // Reject obvious junk
+  if (/(.)\1{3,}/.test(trimmed)) return false; // aaaa
+  if (/^(asdf|qwer|test|aaaa|1234)/i.test(trimmed)) return false;
+  return true;
+};
 interface Props {
   params: Promise<{
     locale: Locale;
@@ -36,28 +89,28 @@ async function getTourBySlug(slug: string) {
       limit(1)
     );
     const snapshot = await getDocs(q);
-    
+
     if (!snapshot.empty) {
       const doc = snapshot.docs[0];
       if (doc) {
         return { id: doc.id, ...doc.data() };
       }
     }
-    
+
     const qFr = query(
       collection(db, 'tours'),
       where('slug.fr', '==', slug),
       limit(1)
     );
     const snapshotFr = await getDocs(qFr);
-    
+
     if (!snapshotFr.empty) {
       const doc = snapshotFr.docs[0];
       if (doc) {
         return { id: doc.id, ...doc.data() };
       }
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error fetching tour:', error);
@@ -69,7 +122,7 @@ export default function BookingPage({ params }: Props) {
   const router = useRouter();
   const { locale, tourSlug } = use(params);
   const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
-  
+
   const [tour, setTour] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
@@ -86,6 +139,9 @@ export default function BookingPage({ params }: Props) {
     specialRequests: '',
   });
 
+  // ── Validation error state ──
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   useEffect(() => {
     async function fetchTour() {
       if (!tourSlug) {
@@ -98,6 +154,28 @@ export default function BookingPage({ params }: Props) {
     }
     fetchTour();
   }, [tourSlug]);
+
+  // ────────────────────────────────────────────────
+  // Validation function for Step 2 (customer details)
+  // ────────────────────────────────────────────────
+  const validateStep2 = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.firstName) newErrors.firstName = 'First name is required';
+    else if (!isValidName(formData.firstName)) newErrors.firstName = 'Enter a valid first name';
+
+    if (!formData.lastName) newErrors.lastName = 'Last name is required';
+    else if (!isValidName(formData.lastName)) newErrors.lastName = 'Enter a valid last name';
+
+    if (!formData.email) newErrors.email = 'Email is required';
+    else if (!isValidEmail(formData.email)) newErrors.email = 'Enter a valid email address';
+
+    if (!formData.phone) newErrors.phone = 'Phone number is required';
+    else if (!isValidPhone(formData.phone)) newErrors.phone = 'Enter a valid phone number';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   if (loading) {
     return (
@@ -126,12 +204,12 @@ export default function BookingPage({ params }: Props) {
   }
 
   const totalGuests = formData.adults + formData.children + formData.infants;
-  
-  // ⭐ DISCOUNT LOGIC
+
+  //  DISCOUNT LOGIC
   const GROUP_DISCOUNT_THRESHOLD = 4;
   const GROUP_DISCOUNT_PERCENTAGE = 15;
   const isEligibleForDiscount = totalGuests >= GROUP_DISCOUNT_THRESHOLD;
-  
+
   const pricePerPerson = tour?.price || 0;
   const subtotal = pricePerPerson * totalGuests;
   const discountAmount = isEligibleForDiscount ? (subtotal * GROUP_DISCOUNT_PERCENTAGE / 100) : 0;
@@ -173,7 +251,7 @@ export default function BookingPage({ params }: Props) {
       subtotal: 'Subtotal',
       discount: 'Group Discount (15%)',
       savings: 'You save',
-      discountApplied: ' 15% Group Discount Applied!',
+      discountApplied: '15% Group Discount Applied!',
     },
     fr: {
       title: 'Réservez Votre Aventure',
@@ -204,16 +282,22 @@ export default function BookingPage({ params }: Props) {
       subtotal: 'Sous-total',
       discount: 'Réduction Groupe (15%)',
       savings: 'Vous économisez',
-      discountApplied: ' 15% de Réduction Groupe Appliquée !',
+      discountApplied: '15% de Réduction Groupe Appliquée !',
     },
   };
 
   const t = content[validLocale]!;
 
   const handleSubmit = async () => {
+    if (!validateStep2()) {
+      toast.error('Please fix the errors before continuing');
+      setCurrentStep(2); // send them back to fix
+      return;
+    }
+
     setSubmitting(true);
     try {
-      console.log(' Creating booking with data:', {
+      console.log('Creating booking with data:', {
         tourId: tour.id,
         tourName: tour.title[validLocale],
         totalAmount: totalAmount,
@@ -249,23 +333,23 @@ export default function BookingPage({ params }: Props) {
         createdAt: serverTimestamp(),
       });
 
-      console.log(' Booking created with ID:', bookingRef.id);
+      console.log('Booking created with ID:', bookingRef.id);
 
       const reference = `BK-${Date.now().toString().slice(-8)}`;
       await updateDoc(doc(db, 'bookings', bookingRef.id), {
         bookingReference: reference,
       });
 
-      console.log(' Booking reference:', reference);
-      console.log(' Redirecting to checkout with ID:', bookingRef.id);
+      console.log('Booking reference:', reference);
+      console.log('Redirecting to checkout with ID:', bookingRef.id);
 
       const checkoutUrl = `/${validLocale}/checkout?type=tour&id=${bookingRef.id}&name=${encodeURIComponent(tour.title[validLocale])}&price=${totalAmount}&fullPrice=${subtotal}&discount=${discountAmount}`;
-      
+
       toast.success('Booking created! Redirecting to payment...');
       router.push(checkoutUrl);
 
     } catch (error) {
-      console.error(' Error creating booking:', error);
+      console.error('Error creating booking:', error);
       toast.error('Something went wrong. Please try again.');
     } finally {
       setSubmitting(false);
@@ -336,7 +420,7 @@ export default function BookingPage({ params }: Props) {
                   </div>
                   <div className="flex items-center gap-1">
                     <UserGroupIcon className="w-4 h-4" />
-                    <span>Max {tour.maxGroupSize}</span>
+                    <span>Max {tour.maxGroupSize || '—'}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <MapPinIcon className="w-4 h-4" />
@@ -436,8 +520,8 @@ export default function BookingPage({ params }: Props) {
                         </div>
                       </div>
                     </div>
-                    
-                    {/* ⭐ Group Discount Badge */}
+
+                    {/*  Group Discount Badge */}
                     {isEligibleForDiscount && (
                       <div className="mt-4 bg-gradient-to-r from-ochre/10 to-terracotta/10 border-2 border-ochre/30 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
                         <div className="w-10 h-10 bg-ochre/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -445,22 +529,22 @@ export default function BookingPage({ params }: Props) {
                         </div>
                         <div>
                           <p className="font-medium text-ochre text-sm flex items-center gap-1">
-                             {t.discountApplied}
+                            {t.discountApplied}
                           </p>
                           <p className="text-xs text-nearblack/60">
-                            {validLocale === 'en' 
-                              ? `You're saving 15% on this booking!` 
+                            {validLocale === 'en'
+                              ? `You're saving 15% on this booking!`
                               : `Vous économisez 15% sur cette réservation !`}
                           </p>
                         </div>
                       </div>
                     )}
-                    
+
                     <div className="text-right text-sm text-nearblack/50 mt-3">
                       {totalGuests} {t.guests}
                       {isEligibleForDiscount && (
                         <span className="text-olive font-medium ml-2">
-                           {GROUP_DISCOUNT_PERCENTAGE}% off!
+                          {GROUP_DISCOUNT_PERCENTAGE}% off!
                         </span>
                       )}
                     </div>
@@ -483,59 +567,127 @@ export default function BookingPage({ params }: Props) {
                 <h2 className="text-xl font-heading text-teal mb-6">{steps[1]?.label}</h2>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* First Name */}
                     <div>
                       <label className="block text-sm font-medium text-nearblack/70 mb-1.5">
                         {t.firstName} *
                       </label>
                       <input
                         type="text"
-                        required
                         value={formData.firstName}
-                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                        className="w-full px-4 py-3.5 rounded-xl border border-cream focus:border-teal focus:ring-2 focus:ring-teal/20 transition-all outline-none bg-cream/30"
+                        onChange={(e) => {
+                          setFormData({ ...formData, firstName: e.target.value });
+                          if (errors.firstName) setErrors({ ...errors, firstName: '' });
+                        }}
+                        onBlur={() => {
+                          if (formData.firstName && !isValidName(formData.firstName)) {
+                            setErrors({ ...errors, firstName: 'Enter a valid first name' });
+                          }
+                        }}
+                        className={`w-full px-4 py-3.5 rounded-xl border focus:ring-2 transition-all outline-none bg-cream/30 ${
+                          errors.firstName
+                            ? 'border-terracotta focus:border-terracotta focus:ring-terracotta/20'
+                            : 'border-cream focus:border-teal focus:ring-teal/20'
+                        }`}
                         placeholder="John"
                       />
+                      {errors.firstName && (
+                        <p className="mt-1.5 text-xs text-terracotta">{errors.firstName}</p>
+                      )}
                     </div>
+
+                    {/* Last Name */}
                     <div>
                       <label className="block text-sm font-medium text-nearblack/70 mb-1.5">
                         {t.lastName} *
                       </label>
                       <input
                         type="text"
-                        required
                         value={formData.lastName}
-                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                        className="w-full px-4 py-3.5 rounded-xl border border-cream focus:border-teal focus:ring-2 focus:ring-teal/20 transition-all outline-none bg-cream/30"
+                        onChange={(e) => {
+                          setFormData({ ...formData, lastName: e.target.value });
+                          if (errors.lastName) setErrors({ ...errors, lastName: '' });
+                        }}
+                        onBlur={() => {
+                          if (formData.lastName && !isValidName(formData.lastName)) {
+                            setErrors({ ...errors, lastName: 'Enter a valid last name' });
+                          }
+                        }}
+                        className={`w-full px-4 py-3.5 rounded-xl border focus:ring-2 transition-all outline-none bg-cream/30 ${
+                          errors.lastName
+                            ? 'border-terracotta focus:border-terracotta focus:ring-terracotta/20'
+                            : 'border-cream focus:border-teal focus:ring-teal/20'
+                        }`}
                         placeholder="Doe"
                       />
+                      {errors.lastName && (
+                        <p className="mt-1.5 text-xs text-terracotta">{errors.lastName}</p>
+                      )}
                     </div>
                   </div>
+
+                  {/* Email */}
                   <div>
                     <label className="block text-sm font-medium text-nearblack/70 mb-1.5">
                       {t.email} *
                     </label>
                     <input
                       type="email"
-                      required
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3.5 rounded-xl border border-cream focus:border-teal focus:ring-2 focus:ring-teal/20 transition-all outline-none bg-cream/30"
+                      onChange={(e) => {
+                        setFormData({ ...formData, email: e.target.value });
+                        if (errors.email) setErrors({ ...errors, email: '' });
+                      }}
+                      onBlur={() => {
+                        if (formData.email && !isValidEmail(formData.email)) {
+                          setErrors({ ...errors, email: 'Enter a valid email address' });
+                        }
+                      }}
+                      className={`w-full px-4 py-3.5 rounded-xl border focus:ring-2 transition-all outline-none bg-cream/30 ${
+                        errors.email
+                          ? 'border-terracotta focus:border-terracotta focus:ring-terracotta/20'
+                          : 'border-cream focus:border-teal focus:ring-teal/20'
+                      }`}
                       placeholder="john@example.com"
                     />
+                    {errors.email && (
+                      <p className="mt-1.5 text-xs text-terracotta">{errors.email}</p>
+                    )}
                   </div>
+
+                  {/* Phone */}
                   <div>
                     <label className="block text-sm font-medium text-nearblack/70 mb-1.5">
                       {t.phone} *
                     </label>
                     <input
                       type="tel"
-                      required
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-3.5 rounded-xl border border-cream focus:border-teal focus:ring-2 focus:ring-teal/20 transition-all outline-none bg-cream/30"
+                      onChange={(e) => {
+                        setFormData({ ...formData, phone: e.target.value });
+                        if (errors.phone) setErrors({ ...errors, phone: '' });
+                      }}
+                      onBlur={() => {
+                        if (formData.phone && !isValidPhone(formData.phone)) {
+                          setErrors({ ...errors, phone: 'Enter a valid phone number' });
+                        }
+                      }}
+                      className={`w-full px-4 py-3.5 rounded-xl border focus:ring-2 transition-all outline-none bg-cream/30 ${
+                        errors.phone
+                          ? 'border-terracotta focus:border-terracotta focus:ring-terracotta/20'
+                          : 'border-cream focus:border-teal focus:ring-teal/20'
+                      }`}
                       placeholder="+253 77 86 26 39"
                     />
+                    {errors.phone && (
+                      <p className="mt-1.5 text-xs text-terracotta">{errors.phone}</p>
+                    )}
+                    <p className="mt-1 text-xs text-nearblack/40">
+                      Include country code (e.g. +253 for Djibouti)
+                    </p>
                   </div>
+
+                  {/* Special Requests */}
                   <div>
                     <label className="block text-sm font-medium text-nearblack/70 mb-1.5">
                       {t.specialRequests}
@@ -549,6 +701,7 @@ export default function BookingPage({ params }: Props) {
                     />
                   </div>
                 </div>
+
                 <div className="flex flex-col sm:flex-row gap-3 mt-8">
                   <button
                     onClick={() => setCurrentStep(1)}
@@ -557,13 +710,14 @@ export default function BookingPage({ params }: Props) {
                     <ArrowLeftIcon className="w-5 h-5" /> {t.back}
                   </button>
                   <button
-                    onClick={() => setCurrentStep(3)}
-                    disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone}
-                    className={`flex-1 px-8 py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
-                      formData.firstName && formData.lastName && formData.email && formData.phone
-                        ? 'bg-gradient-to-r from-teal to-teal/80 hover:from-teal/90 hover:to-teal/70 text-white hover:shadow-lg hover:scale-[1.02] active:scale-95'
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
+                    onClick={() => {
+                      if (!validateStep2()) {
+                        toast.error('Please fix the errors before continuing');
+                        return;
+                      }
+                      setCurrentStep(3);
+                    }}
+                    className="flex-1 px-8 py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-teal to-teal/80 hover:from-teal/90 hover:to-teal/70 text-white hover:shadow-lg hover:scale-[1.02] active:scale-95"
                   >
                     {t.next} <ArrowRightIcon className="w-5 h-5" />
                   </button>
@@ -587,38 +741,37 @@ export default function BookingPage({ params }: Props) {
                         <div className="font-medium text-teal">{totalGuests}</div>
                       </div>
                     </div>
-                    
-                    {/* ⭐ Pricing Breakdown with Discount */}
+
+                    {/*  Pricing Breakdown with Discount */}
                     <div className="mt-4 pt-4 border-t border-cream space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-nearblack/60">{t.subtotal} ({totalGuests} × ${pricePerPerson})</span>
                         <span className="text-nearblack">${subtotal.toFixed(2)}</span>
                       </div>
-                      
+
                       {isEligibleForDiscount && (
                         <div className="flex justify-between text-sm text-olive font-medium">
                           <span className="flex items-center gap-1">
-                            <  SparklesIcon
- className="w-4 h-4" />
+                            <SparklesIcon className="w-4 h-4" />
                             {t.discount}
                           </span>
                           <span>-${discountAmount.toFixed(2)}</span>
                         </div>
                       )}
-                      
+
                       <div className="flex justify-between text-lg font-bold pt-2 border-t border-cream">
                         <span className="text-teal">{t.total}</span>
                         <span className="text-teal">${totalAmount.toFixed(2)}</span>
                       </div>
-                      
+
                       {isEligibleForDiscount && (
                         <div className="text-xs text-olive font-medium text-right">
-                           {t.savings} ${discountAmount.toFixed(2)}!
+                          {t.savings} ${discountAmount.toFixed(2)}!
                         </div>
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="bg-cream/30 rounded-2xl p-5 border border-cream">
                     <p className="font-medium text-teal">{formData.firstName} {formData.lastName}</p>
                     <p className="text-sm text-nearblack/60">{formData.email}</p>
@@ -637,14 +790,15 @@ export default function BookingPage({ params }: Props) {
                       <div>
                         <p className="text-sm font-medium text-teal">{t.paymentNote}</p>
                         <p className="text-xs text-nearblack/50 mt-1">
-                          {validLocale === 'en' 
-                            ? `You will pay the full amount of $${totalAmount.toFixed(2)} now.` 
+                          {validLocale === 'en'
+                            ? `You will pay the full amount of $${totalAmount.toFixed(2)} now.`
                             : `Vous paierez le montant total de $${totalAmount.toFixed(2)} maintenant.`}
                         </p>
                       </div>
                     </div>
                   </div>
                 </div>
+
                 <div className="flex flex-col sm:flex-row gap-3 mt-8">
                   <button
                     onClick={() => setCurrentStep(2)}

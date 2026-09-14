@@ -64,7 +64,7 @@ export default function CarDetailPage({ params }: Props) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [pickupDate, setPickupDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
-  // ⭐ Driver is always true - removed the toggle
+  //  Driver is always true - removed the toggle
   const withDriver = true;
 
   useEffect(() => {
@@ -180,7 +180,7 @@ export default function CarDetailPage({ params }: Props) {
   const totalDays = pickupDate && returnDate 
     ? Math.max(1, Math.ceil((new Date(returnDate).getTime() - new Date(pickupDate).getTime()) / (1000 * 60 * 60 * 24)))
     : 1;
-  // ⭐ Always use priceWithDriver (compulsory)
+  //  Always use priceWithDriver (compulsory)
   const dailyPrice = car.priceWithDriver;
   const totalPrice = dailyPrice * totalDays;
 
@@ -302,7 +302,7 @@ export default function CarDetailPage({ params }: Props) {
                 <div className="text-3xl font-bold text-teal">${car.priceWithDriver}</div>
                 <div className="text-sm text-nearblack/50">{t.perDay} {t.withDriver}</div>
                 <div className="text-xs text-olive mt-1">
-                  ✅ {t.driverNote}
+                   {t.driverNote}
                 </div>
               </div>
 
@@ -336,7 +336,7 @@ export default function CarDetailPage({ params }: Props) {
                 />
               </div>
 
-              {/* ⭐ Driver Option - Compulsory (display only, no toggle) */}
+              {/*  Driver Option - Compulsory (display only, no toggle) */}
               <div className="bg-olive/5 rounded-xl p-4 border border-olive/20">
                 <div className="flex items-center gap-2">
                   <CheckCircleIcon className="w-5 h-5 text-olive" />

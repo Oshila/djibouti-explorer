@@ -200,7 +200,7 @@ export function TourListing({ locale, filters }: Props) {
           <div className="flex flex-wrap gap-2 mt-4">
             {filters.destination && (
               <span className="inline-flex items-center gap-1 bg-teal/10 text-teal text-sm px-3 py-1 rounded-full">
-                📍 {filters.destination}
+                 {filters.destination}
                 <button onClick={() => window.location.href = `/${locale}/tours`}>
                   <XMarkIcon className="w-4 h-4" />
                 </button>

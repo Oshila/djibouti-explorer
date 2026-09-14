@@ -288,7 +288,7 @@ export default function TourDetail({ tour, locale }: Props) {
                           <MapPinIcon className="w-5 h-5 text-teal flex-shrink-0 mt-0.5" />
                           <div>
                             <div className="text-sm font-medium text-teal">
-                              {locale === 'en' ? '📍 Meeting Point' : '📍 Point de Rendez-vous'}
+                              {locale === 'en' ? ' Meeting Point' : ' Point de Rendez-vous'}
                             </div>
                             <div className="text-sm text-nearblack/80 mt-1">{tour.meetingPoint[locale]}</div>
                           </div>

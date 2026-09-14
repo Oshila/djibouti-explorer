@@ -97,7 +97,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: `✅ Successfully seeded ${count} cars to Firestore!`,
+      message: ` Successfully seeded ${count} cars to Firestore!`,
       seeded: count,
       cars: cars.map(c => c.name)
     });

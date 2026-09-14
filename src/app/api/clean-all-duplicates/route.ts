@@ -27,7 +27,7 @@ export async function POST() {
       } else {
         seen[slug] = doc.id;
         kept++;
-        console.log(`✅ Kept: ${slug}`);
+        console.log(` Kept: ${slug}`);
       }
     }
 

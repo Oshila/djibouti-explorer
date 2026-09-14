@@ -24,7 +24,7 @@ export async function POST() {
           updatedAt: new Date().toISOString(),
         });
         updatedCount++;
-        console.log(`✅ Updated: ${data.title?.en} → ${displayDuration}`);
+        console.log(` Updated: ${data.title?.en} → ${displayDuration}`);
       }
     }
 

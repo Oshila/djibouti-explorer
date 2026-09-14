@@ -26,7 +26,7 @@ export async function generateVisaPDF(data: VisaData): Promise<Buffer> {
     });
   };
 
-  // ⭐ Logo will be added by the API route (not here)
+  //  Logo will be added by the API route (not here)
   // The API route will load the image and embed it
 
   // Header - Company Name

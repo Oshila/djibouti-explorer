@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    // ⭐ Load and embed the logo
+    //  Load and embed the logo
     let logoImage = null;
     try {
       const logoPath = path.join(process.cwd(), 'public/images/logo.jpg');
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       });
     };
 
-    // ⭐ Draw logo if available
+    //  Draw logo if available
     let currentY = 770;
     if (logoImage) {
       const logoWidth = 80;

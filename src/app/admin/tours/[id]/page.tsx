@@ -1024,7 +1024,7 @@ export default function EditTourPage({
     );
   };
 
-  // ✅ INCLUDED/EXCLUDED TAB
+  //  INCLUDED/EXCLUDED TAB
   const renderIncludedTab = () => {
     if (!tour) return null;
 
@@ -1133,7 +1133,7 @@ export default function EditTourPage({
     );
   };
 
-  // ⭐ REVIEWS TAB
+  //  REVIEWS TAB
   const renderReviewsTab = () => {
     if (!tour) return null;
 
@@ -1365,8 +1365,8 @@ export default function EditTourPage({
         {[
           { id: 'overview', label: '📋 Overview' },
           { id: 'itinerary', label: '📅 Itinerary' },
-          { id: 'included', label: '✅ Included' },
-          { id: 'reviews', label: '⭐ Reviews' },
+          { id: 'included', label: ' Included' },
+          { id: 'reviews', label: ' Reviews' },
           { id: 'faq', label: '❓ FAQ' },
         ].map(tab => (
           <button

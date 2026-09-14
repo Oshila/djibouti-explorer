@@ -703,6 +703,31 @@ export default function CheckoutPage({ params }: Props) {
 
   const isEn = validLocale === 'en';
 
+  //  Determine where "Back" should go, based on booking type
+  const getBackLink = () => {
+    if (bookingType === 'car') {
+      return `/${validLocale}/cars`;
+    }
+    if (bookingType === 'visa') {
+      return `/${validLocale}/visa`;
+    }
+    // Default: back to the tour booking form (if we know the slug)
+    const tourSlug = searchParams.get('tourSlug');
+    return tourSlug
+      ? `/${validLocale}/booking/${tourSlug}`
+      : `/${validLocale}/tours`;
+  };
+
+  const getBackLabel = () => {
+    if (bookingType === 'car') {
+      return isEn ? 'Back to Cars' : 'Retour aux Voitures';
+    }
+    if (bookingType === 'visa') {
+      return isEn ? 'Back to Visa' : 'Retour au Visa';
+    }
+    return isEn ? 'Back to Booking' : 'Retour à la Réservation';
+  };
+
   useEffect(() => {
     const type = searchParams.get('type');
     const id = searchParams.get('id');
@@ -792,16 +817,16 @@ export default function CheckoutPage({ params }: Props) {
       <div className="min-h-screen bg-cream py-12">
         <div className="container-custom max-w-2xl mx-auto">
           <div className="bg-white rounded-2xl shadow-sm border border-cream p-8 text-center">
-            <div className="text-4xl mb-4">⚠️</div>
+            <div className="text-4xl mb-4"></div>
             <h1 className="text-xl font-heading text-teal mb-2">
               {isEn ? 'Payment Error' : 'Erreur de Paiement'}
             </h1>
             <p className="text-nearblack/60">{error || 'Something went wrong. Please try again.'}</p>
             <Link
-              href={`/${validLocale}/booking/${searchParams.get('tourSlug') || ''}`}
+              href={getBackLink()}
               className="inline-block mt-4 text-teal hover:text-terracotta transition-colors"
             >
-              {isEn ? 'Back to Booking' : 'Retour à la Réservation'}
+              ← {getBackLabel()}
             </Link>
           </div>
         </div>
@@ -813,11 +838,11 @@ export default function CheckoutPage({ params }: Props) {
     <div className="min-h-screen bg-cream py-12">
       <div className="container-custom max-w-2xl mx-auto">
         <Link
-          href={`/${validLocale}/booking/${searchParams.get('tourSlug') || ''}`}
+          href={getBackLink()}
           className="inline-flex items-center gap-2 text-nearblack/60 hover:text-teal transition-colors mb-6"
         >
           <ArrowLeftIcon className="w-4 h-4" />
-          {isEn ? 'Back to Booking' : 'Retour à la Réservation'}
+          {getBackLabel()}
         </Link>
 
         <div className="bg-white rounded-2xl shadow-sm border border-cream p-8">

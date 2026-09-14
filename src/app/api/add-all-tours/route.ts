@@ -1017,9 +1017,9 @@ export async function POST() {
       if (existing.empty) {
         await adminDb.collection('tours').add(tour);
         addedCount++;
-        console.log(`✅ Added: ${tour.slug.en}`);
+        console.log(` Added: ${tour.slug.en}`);
       } else {
-        console.log(`⚠️ Already exists: ${tour.slug.en}`);
+        console.log(` Already exists: ${tour.slug.en}`);
       }
     }
 

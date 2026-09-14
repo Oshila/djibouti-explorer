@@ -212,7 +212,7 @@ export default function AdminVisaSettings() {
                 </label>
               ) : (
                 <div className={`text-lg font-medium ${settings.isActive ? 'text-olive' : 'text-terracotta'}`}>
-                  {settings.isActive ? '✅ Active' : '❌ Inactive'}
+                  {settings.isActive ? ' Active' : ' Inactive'}
                 </div>
               )}
             </div>
