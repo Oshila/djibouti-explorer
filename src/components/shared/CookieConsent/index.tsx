@@ -26,14 +26,13 @@ export default function CookieConsent() {
 
   useEffect(() => {
     const consent = localStorage.getItem('cookieConsent');
-    if (!consent) {
-      // Small delay so it doesn't flash on first paint
-      const timer = setTimeout(() => setIsVisible(true), 800);
-      return () => clearTimeout(timer);
-    }
+    if (consent) return;
+
+    const timer = setTimeout(() => setIsVisible(true), 800);
+    return () => clearTimeout(timer);
   }, []);
 
-  // ── ACCEPT ALL ─────────────────────────────
+  // ACCEPT ALL
   const acceptAll = () => {
     const consent = {
       necessary: true,
@@ -42,12 +41,10 @@ export default function CookieConsent() {
       timestamp: new Date().toISOString(),
     };
     localStorage.setItem('cookieConsent', JSON.stringify(consent));
-    // Enable analytics here if you use GTM/GA:
-    // window.gtag?.('consent', 'update', { analytics_storage: 'granted' });
     setIsVisible(false);
   };
 
-  // ── DECLINE ALL (except strictly necessary) ─
+  // DECLINE ALL (except strictly necessary)
   const declineAll = () => {
     const consent = {
       necessary: true,
@@ -56,12 +53,10 @@ export default function CookieConsent() {
       timestamp: new Date().toISOString(),
     };
     localStorage.setItem('cookieConsent', JSON.stringify(consent));
-    // Disable analytics here:
-    // window.gtag?.('consent', 'update', { analytics_storage: 'denied' });
     setIsVisible(false);
   };
 
-  // ── SAVE CUSTOM PREFERENCES ─────────────────
+  // SAVE CUSTOM PREFERENCES
   const savePreferences = () => {
     const consent = {
       necessary: true,
@@ -80,17 +75,16 @@ export default function CookieConsent() {
     <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 sm:p-6">
       <div className="container-custom max-w-4xl mx-auto">
         <div className="bg-teal/95 backdrop-blur-md text-cream rounded-2xl shadow-2xl border border-white/10 p-5 sm:p-6">
-          {/* ── MAIN BANNER ── */}
+          {/* MAIN BANNER */}
           {!showPreferences ? (
             <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
-              {/* Text */}
               <div className="flex-1">
                 <h3 className="font-heading text-lg text-white mb-1">
                   {isEn ? 'We value your privacy' : 'Nous respectons votre vie privée'}
                 </h3>
                 <p className="text-sm text-cream/70 leading-relaxed">
                   {isEn
-                    ? 'We use cookies to run the site, understand how it\'s used, and personalize your experience. You can accept all, decline non-essential cookies, or customize your preferences.'
+                    ? 'We use cookies to run the site, understand how it is used, and personalize your experience. You can accept all, decline non-essential cookies, or customize your preferences.'
                     : 'Nous utilisons des cookies pour faire fonctionner le site, comprendre son utilisation et personnaliser votre expérience. Vous pouvez tout accepter, refuser les cookies non essentiels ou personnaliser vos préférences.'}{' '}
                   <Link
                     href={`/${locale}/privacy`}
@@ -101,9 +95,7 @@ export default function CookieConsent() {
                 </p>
               </div>
 
-              {/* Buttons */}
               <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full lg:w-auto">
-                {/* Customize */}
                 <button
                   onClick={() => setShowPreferences(true)}
                   className="flex items-center justify-center gap-1.5 border border-white/20 hover:border-white/40 hover:bg-white/10 text-cream px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
@@ -112,7 +104,6 @@ export default function CookieConsent() {
                   {isEn ? 'Customize' : 'Personnaliser'}
                 </button>
 
-                {/* Decline */}
                 <button
                   onClick={declineAll}
                   className="border border-white/20 hover:border-white/40 hover:bg-white/10 text-cream px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
@@ -120,7 +111,6 @@ export default function CookieConsent() {
                   {isEn ? 'Decline' : 'Refuser'}
                 </button>
 
-                {/* Accept */}
                 <button
                   onClick={acceptAll}
                   className="bg-ochre hover:bg-ochre/90 text-nearblack px-5 py-2.5 rounded-lg text-sm font-semibold transition-all hover:shadow-lg whitespace-nowrap"
@@ -129,7 +119,6 @@ export default function CookieConsent() {
                 </button>
               </div>
 
-              {/* Close (only hides — same as decline for non-essential) */}
               <button
                 onClick={declineAll}
                 aria-label="Close"
@@ -139,7 +128,7 @@ export default function CookieConsent() {
               </button>
             </div>
           ) : (
-            /* ── PREFERENCES PANEL ── */
+            /* PREFERENCES PANEL */
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-heading text-lg text-white">
@@ -155,7 +144,7 @@ export default function CookieConsent() {
               </div>
 
               <div className="space-y-3 mb-5">
-                {/* Necessary — always on */}
+                {/* Necessary - always on */}
                 <div className="flex items-start justify-between gap-4 bg-white/5 rounded-xl p-4 border border-white/10">
                   <div className="flex-1">
                     <p className="font-medium text-white text-sm">
