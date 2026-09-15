@@ -5,7 +5,7 @@ import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Locale } from '@/types';
 import { db } from '@/lib/firebase/client';
-import { collection, query, where, getDocs, limit, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, addDoc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import {
   CalendarIcon,
@@ -74,6 +74,7 @@ const isValidName = (name: string) => {
   if (/^(asdf|qwer|test|aaaa|1234)/i.test(trimmed)) return false;
   return true;
 };
+
 interface Props {
   params: Promise<{
     locale: Locale;
@@ -297,18 +298,24 @@ export default function BookingPage({ params }: Props) {
 
     setSubmitting(true);
     try {
+      // ⭐ FIX: Generate reference BEFORE creating the booking
+      const reference = `BK-${Date.now().toString().slice(-8)}`;
+
       console.log('Creating booking with data:', {
         tourId: tour.id,
         tourName: tour.title[validLocale],
+        reference: reference,
         totalAmount: totalAmount,
         discountAmount: discountAmount,
         isGroupDiscount: isEligibleForDiscount,
       });
 
+      // ⭐ FIX: Include reference in the initial create — no second update needed
       const bookingRef = await addDoc(collection(db, 'bookings'), {
         tourId: tour.id,
         tourName: tour.title[validLocale],
         tourSlug: tourSlug,
+        bookingReference: reference,   // ⭐ Included here
         date: formData.date || null,
         travellers: {
           adults: formData.adults,
@@ -334,12 +341,6 @@ export default function BookingPage({ params }: Props) {
       });
 
       console.log('Booking created with ID:', bookingRef.id);
-
-      const reference = `BK-${Date.now().toString().slice(-8)}`;
-      await updateDoc(doc(db, 'bookings', bookingRef.id), {
-        bookingReference: reference,
-      });
-
       console.log('Booking reference:', reference);
       console.log('Redirecting to checkout with ID:', bookingRef.id);
 
