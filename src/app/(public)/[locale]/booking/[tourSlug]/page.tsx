@@ -298,7 +298,7 @@ export default function BookingPage({ params }: Props) {
 
     setSubmitting(true);
     try {
-      // ⭐ FIX: Generate reference BEFORE creating the booking
+      //  FIX: Generate reference BEFORE creating the booking
       const reference = `BK-${Date.now().toString().slice(-8)}`;
 
       console.log('Creating booking with data:', {
@@ -310,12 +310,12 @@ export default function BookingPage({ params }: Props) {
         isGroupDiscount: isEligibleForDiscount,
       });
 
-      // ⭐ FIX: Include reference in the initial create — no second update needed
+      //  FIX: Include reference in the initial create — no second update needed
       const bookingRef = await addDoc(collection(db, 'bookings'), {
         tourId: tour.id,
         tourName: tour.title[validLocale],
         tourSlug: tourSlug,
-        bookingReference: reference,   // ⭐ Included here
+        bookingReference: reference,   //  Included here
         date: formData.date || null,
         travellers: {
           adults: formData.adults,
