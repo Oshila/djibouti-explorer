@@ -1,5 +1,6 @@
 'use client';
 
+import type { Metadata } from 'next';
 import { useState, useEffect } from 'react';
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
@@ -117,6 +118,24 @@ async function getTourBySlug(slug: string) {
     console.error('Error fetching tour:', error);
     return null;
   }
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale, tourSlug } = await params;
+  const validLocale = (locale === 'en' || locale === 'fr') ? locale : 'en';
+  const baseUrl = 'https://djiboutiexplorer.com';
+
+  return {
+    // This tells Google: don't index this booking page
+    robots: {
+      index: false,
+      follow: true,
+    },
+    // This tells Google: the real page is the tour detail page
+    alternates: {
+      canonical: `${baseUrl}/${validLocale}/tours/${tourSlug}`,
+    },
+  };
 }
 
 export default function BookingPage({ params }: Props) {
