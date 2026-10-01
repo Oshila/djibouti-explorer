@@ -1,6 +1,6 @@
 'use client';
 
-import type { Metadata } from 'next';
+
 import { useState, useEffect } from 'react';
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
@@ -21,6 +21,12 @@ import {
   SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { SparklesIcon as SparklesSolid } from '@heroicons/react/24/solid';
+export const metadata = {
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 // ────────────────────────────────────────────────
 // STRICTER inline validators
